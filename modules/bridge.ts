@@ -32,12 +32,6 @@ export class Bridge {
         const ethBalance = await arbClient.getBalance({
             address: arbWallet.account.address,
         })
-
-        if (value > ethBalance) {
-            value = BigInt(Math.round(Number(ethBalance) * 0.8))
-        }
-
-        this.logger.info(`${arbWallet.account.address} | Stargate Arbitrum -> Base ${formatEther(value)} ETH`)
     
         const dstNativeAddr:`0x${string}` = '0x0000000000000000000000000000000000000001'
         const lzTxParams = {
@@ -59,8 +53,16 @@ export class Bridge {
             ]
         })
     
-        const valueL0 = value+txValue[0]
-        const amountLD: bigint = BigInt(Math.round(Number(value) * 0.995))
+        let valueL0 = value+txValue[0]
+        let amountLD: bigint = BigInt(Math.round(Number(value) * 0.995))
+
+        if (valueL0 > ethBalance) {
+            valueL0 = ethBalance - BigInt(parseEther('0.0002'))
+            amountLD = ethBalance - txValue[0] - BigInt(parseEther('0.0002'))
+        }
+
+        this.logger.info(`${arbWallet.account.address} | Stargate Arbitrum -> Base ${formatEther(amountLD)} ETH`)
+
         const minAmount: bigint = BigInt(Math.round(Number(amountLD) * 0.995))
     
         const args: readonly [
@@ -94,12 +96,6 @@ export class Bridge {
         const ethBalance = await optimismClient.getBalance({
             address: optimismWallet.account.address,
         })
-
-        if (value > ethBalance) {
-            value = BigInt(Math.round(Number(ethBalance) * 0.8))
-        }
-
-        this.logger.info(`${optimismWallet.account.address} | Stargate Arbitrum -> Base ${formatEther(value)} ETH`)
     
         const dstNativeAddr:`0x${string}` = '0x0000000000000000000000000000000000000001'
         const lzTxParams = {
@@ -121,9 +117,17 @@ export class Bridge {
             ]
         })
     
-        const valueL0 = value+txValue[0]
-        const amountLD: bigint = BigInt(Math.round(Number(value) * 0.995))
-        const minAmount: bigint = BigInt(Math.round(Number(amountLD) * 0.995))
+        let valueL0 = value+txValue[0]
+        let amountLD: bigint = BigInt(Math.round(Number(value) * 0.995))
+        
+        if (valueL0 > ethBalance) {
+            valueL0 = ethBalance - BigInt(parseEther('0.0002'))
+            amountLD = ethBalance - txValue[0] - BigInt(parseEther('0.0002'))
+        }
+        
+        let minAmount: bigint = BigInt(Math.round(Number(amountLD) * 0.995))
+
+        this.logger.info(`${optimismWallet.account.address} | Stargate Arbitrum -> Base ${formatEther(amountLD)} ETH`)
     
         const args: readonly [
             number,
