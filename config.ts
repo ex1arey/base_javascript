@@ -1,3 +1,8 @@
+export const generalConfig = {
+    sleep_from: 30,
+    sleep_to: 100
+}
+
 export const bridgeConfig = {
     type: 'stargate', // 'stargate', 'official'
     stargate_from: 'optimism', // 'arbitrum', 'optimism'

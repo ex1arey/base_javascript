@@ -4,10 +4,11 @@ import {Hex} from "viem"
 import { Bridge } from "./modules/bridge"
 import { privateKeyConvert, readWallets } from "./utils/wallet"
 import { random, randomFloat, sleep } from "./utils/common"
-import { bridgeConfig, mintfunConfig } from "./config"
+import { bridgeConfig, generalConfig, mintfunConfig } from "./config"
 import { makeLogger } from "./utils/logger"
 import { entryPoint } from "./utils/menu"
 import { Mintfun } from "./modules/mintfun"
+import { L2Telegraph } from "./modules/l2telegraph"
 
 const privateKeys = readWallets('./private_keys.txt')
 
@@ -55,6 +56,52 @@ async function mintfun() {
     }
 }
 
+async function l2telegraph() {
+    const logger = makeLogger("L2Telegraph")
+    for (let privateKey of privateKeys) {
+        const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
+
+        const sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+        await l2telegraph.mintAndBridge()
+
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function l2telegraphMessage() {
+    const logger = makeLogger("L2Telegraph")
+    for (let privateKey of privateKeys) {
+        const mintfun = new L2Telegraph(privateKeyConvert(privateKey))
+
+        const sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+        await mintfun.sendMessage()
+
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function randomModule() {
+    const logger = makeLogger("Random")
+    for (let privateKey of privateKeys) {
+        const randomChooice = random(1, 2)
+        let sleepTime
+
+        if (randomChooice === 1) {
+            const mintfun = new Mintfun(privateKeyConvert(privateKey))
+            sleepTime = random(mintfunConfig.sleep_from, mintfunConfig.sleep_to)
+            await mintfun.mintRandom()
+        } else {
+            const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
+            sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+            await l2telegraph.mintAndBridge()
+        }
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function startMenu() {
     let mode = await entryPoint()
     switch (mode) {
@@ -63,6 +110,15 @@ async function startMenu() {
             break
         case "mintfun":
             await mintfun()
+            break
+        case "l2telegraph":
+            await l2telegraph()
+            break
+        case "l2telegraph_message":
+            await l2telegraphMessage()
+            break
+        case "random":
+            await randomModule()
             break
     }
 }

@@ -15,6 +15,18 @@ export const entryPoint = async () => {
                     name: "Mintfun",
                     value: "mintfun",
                 },
+                {
+                    name: "L2Telegraph",
+                    value: "l2telegraph",
+                },
+                {
+                    name: "L2Telegraph Message",
+                    value: "l2telegraph_message",
+                },
+                {
+                    name: "Random (mintfun + l2telegraph) $0.05 - $0.40",
+                    value: "random",
+                },
             ],
             default: "bridge",
             loop: false,
