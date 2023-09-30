@@ -43,8 +43,10 @@ async function mintfun() {
             const sleepTime = random(mintfunConfig.sleep_from, mintfunConfig.sleep_to)
             await mintfun.mintRandom()
 
-            logger.info(`Waiting ${sleepTime} sec until next mint...`)
-            await sleep(sleepTime * 1000)
+            if (txCount > 1) {
+                logger.info(`Waiting ${sleepTime} sec until next mint...`)
+                await sleep(sleepTime * 1000)
+            }
         }
 
         const sleepTime = random(mintfunConfig.sleep_from, mintfunConfig.sleep_to)

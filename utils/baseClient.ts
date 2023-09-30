@@ -1,4 +1,4 @@
-import { publicL1OpStackActions, publicL2OpStackActions } from "op-viem"
+import { publicL1OpStackActions, publicL2OpStackActions, walletL1OpStackActions } from "op-viem"
 import {
     Chain,
     createPublicClient,
@@ -40,7 +40,7 @@ function getPublicBaseClient(): PublicClient {
 }
 
 function getBaseWalletClient(privateKey:Hex): WalletClient<HttpTransport, Chain, PrivateKeyAccount> {
-    return createWalletClient({ chain: base, account: privateKeyToAccount(privateKey), transport: http() })
+    return createWalletClient({ chain: base, account: privateKeyToAccount(privateKey), transport: http() }).extend(walletL1OpStackActions)
 }
 
 export { getPublicBaseClient, getBaseWalletClient }
