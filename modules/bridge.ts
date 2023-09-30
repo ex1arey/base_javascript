@@ -127,7 +127,7 @@ export class Bridge {
         
         let minAmount: bigint = BigInt(Math.round(Number(amountLD) * 0.995))
 
-        this.logger.info(`${optimismWallet.account.address} | Stargate Arbitrum -> Base ${formatEther(amountLD)} ETH`)
+        this.logger.info(`${optimismWallet.account.address} | Stargate Optimism -> Base ${formatEther(amountLD)} ETH`)
     
         const args: readonly [
             number,
