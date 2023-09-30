@@ -23,12 +23,17 @@ export class Mintfun {
 
         const contract: Hex = getRandomContract(mintfunContracts)
         const amount: bigint = BigInt(1)
+        let nftName = ''
 
-        const nftName = await this.client.readContract({
-            address: contract,
-            abi: mintfunAbi,
-            functionName: 'name',
-        })
+        try {
+            nftName = await this.client.readContract({
+                address: contract,
+                abi: mintfunAbi,
+                functionName: 'name',
+            })
+        } catch (e) {
+            this.logger.info(`${baseWallet.account.address} | Error: ${e.shortMessage}`)
+        }
 
         this.logger.info(`${baseWallet.account.address} | Mint «${nftName}»`)
 
