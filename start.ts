@@ -9,6 +9,7 @@ import { makeLogger } from "./utils/logger"
 import { entryPoint } from "./utils/menu"
 import { Mintfun } from "./modules/mintfun"
 import { L2Telegraph } from "./modules/l2telegraph"
+import { Merkly } from "./modules/merkly"
 
 const privateKeys = readWallets('./private_keys.txt')
 
@@ -82,6 +83,19 @@ async function l2telegraphMessage() {
     }
 }
 
+async function merklyRefuel() {
+    const logger = makeLogger("Merkly")
+    for (let privateKey of privateKeys) {
+        const mintfun = new Merkly(privateKeyConvert(privateKey))
+
+        const sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+        await mintfun.refuel()
+
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function randomModule() {
     const logger = makeLogger("Random")
     for (let privateKey of privateKeys) {
@@ -107,6 +121,9 @@ async function startMenu() {
     switch (mode) {
         case "bridge":
             await bridge()
+            break
+        case "merkly":
+            await merklyRefuel()
             break
         case "mintfun":
             await mintfun()

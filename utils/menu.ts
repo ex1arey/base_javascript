@@ -12,6 +12,10 @@ export const entryPoint = async () => {
                     value: "bridge",
                 },
                 {
+                    name: "Merkly",
+                    value: "merkly",
+                },
+                {
                     name: "Mintfun",
                     value: "mintfun",
                 },
