@@ -144,8 +144,7 @@ export class Uniswap {
                     args: [
                         deadline,
                         [txData, unwrapData]
-                    ],
-                    value: amount
+                    ]
                 })
 
                 successSwap = true

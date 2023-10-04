@@ -145,8 +145,7 @@ export class Pancake {
                     args: [
                         deadline,
                         [txData, unwrapData]
-                    ],
-                    value: amount
+                    ]
                 })
 
                 successSwap = true
