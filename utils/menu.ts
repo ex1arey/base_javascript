@@ -16,6 +16,14 @@ export const entryPoint = async () => {
                     value: "merkly",
                 },
                 {
+                    name: "Uniswap [ETH -> Random stable -> ETH]",
+                    value: "uniswap",
+                },
+                {
+                    name: "Pancake [ETH -> Random stable -> ETH]",
+                    value: "pancake",
+                },
+                {
                     name: "Baseswap [ETH -> Random stable -> ETH]",
                     value: "baseswap",
                 },

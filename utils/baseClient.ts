@@ -32,7 +32,13 @@ export const base = defineChain({
     },
     blockExplorers: {
         default: { name: 'Explorer', url: 'https://basescan.org/' },
-    }
+    },
+    contracts: {
+        multicall3: {
+            address: '0xca11bde05977b3631167028862be2a173976ca11',
+            blockCreated: 5022,
+        },
+    },
 })
 
 function getPublicBaseClient(): PublicClient {

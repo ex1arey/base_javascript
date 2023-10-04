@@ -8,6 +8,8 @@ import { Mintfun } from "./modules/mintfun"
 import { L2Telegraph } from "./modules/l2telegraph"
 import { Merkly } from "./modules/merkly"
 import { Baseswap } from "./modules/baseswap"
+import { Pancake } from "./modules/pancake"
+import { Uniswap } from "./modules/uniswap"
 
 let privateKeys = readWallets('./private_keys.txt')
 
@@ -132,6 +134,32 @@ async function baseswapModule() {
     }
 }
 
+async function pancakeModule() {
+    const logger = makeLogger("Pancake")
+    for (let privateKey of privateKeys) {
+        const pancake = new Pancake(privateKeyConvert(privateKey))
+
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        await pancake.roundSwap()
+
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function uniswapModule() {
+    const logger = makeLogger("uniswap")
+    for (let privateKey of privateKeys) {
+        const uniswap = new Uniswap(privateKeyConvert(privateKey))
+
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        await uniswap.roundSwap()
+
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function startMenu() {
     let mode = await entryPoint()
     switch (mode) {
@@ -140,6 +168,12 @@ async function startMenu() {
             break
         case "merkly":
             await merklyRefuelModule()
+            break
+        case "pancake":
+            await pancakeModule()
+            break
+        case "uniswap":
+            await uniswapModule()
             break
         case "baseswap":
             await baseswapModule()

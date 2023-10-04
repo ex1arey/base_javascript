@@ -1,17 +1,21 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, encodePacked, formatEther, parseEther} from "viem"
+import {Hex, encodeFunctionData, encodePacked, formatEther, parseEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, sleep } from "../utils/common"
 import { tokens } from "../data/base-tokens"
-import { baseswapRouterAbi } from "../data/abi/baseswap_router"
 import { approve } from "../utils/approve"
 import { getTokenBalance } from "../utils/tokenBalance"
 import { generalConfig, swapConfig } from "../config"
+import { pancakeFactoryAbi } from "../data/abi/pancake_factory"
+import { pancakeQuouterAbi } from "../data/abi/pancake_quoter"
+import { pancakeRouterAbi } from "../data/abi/pancake_router"
 
-export class Baseswap {
+export class Pancake {
     privateKey: Hex
     logger: any
-    baseswapContract: Hex = '0x327Df1E6de05895d2ab08513aaDD9313Fe505d86'
+    pancakeRouterContract: Hex = '0x678Aa4bF4E210cf2166753e054d5b7c31cc7fa86'
+    pancakeFactoryContract: Hex = '0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865'
+    pancakeQuoterContract: Hex = '0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997'
     randomNetwork: any
     baseClient: any
     baseWallet: any
@@ -19,7 +23,7 @@ export class Baseswap {
 
     constructor(privateKey:Hex) {
         this.privateKey = privateKey
-        this.logger = makeLogger("Baseswap")
+        this.logger = makeLogger("Pancake")
         this.baseClient = getPublicBaseClient()
         this.baseWallet = getBaseWalletClient(privateKey)
         this.walletAddress = this.baseWallet.account.address
@@ -27,19 +31,19 @@ export class Baseswap {
 
     async getMinAmountOut(fromToken: Hex, toToken: Hex, amount: BigInt, slippage: number) {
         const minAmountOut = await this.baseClient.readContract({
-            address: this.baseswapContract,
-            abi: baseswapRouterAbi,
-            functionName: 'getAmountsOut',
-            args: [
-                amount,
-                [
-                    fromToken,
-                    toToken
-                ]
-            ]
+            address: this.pancakeQuoterContract,
+            abi: pancakeQuouterAbi,
+            functionName: 'quoteExactInputSingle',
+            args: [{
+                tokenIn: fromToken,
+                tokenOut: toToken,
+                amountIn: amount,
+                fee: 500,
+                sqrtPriceLimitX96: BigInt(0)
+            }]
         })
 
-        return BigInt(Math.round(Number(minAmountOut[1]) - (Number(minAmountOut[1]) /100 * slippage)))
+        return BigInt(Math.round(Number(minAmountOut[0]) - (Number(minAmountOut[0]) / 100 * slippage)))
     }
 
     async swapEthToToken(toToken: string = 'USDC', amount: bigint) {
@@ -52,21 +56,31 @@ export class Baseswap {
                 const minAmountOut = await this.getMinAmountOut(tokens['ETH'], tokens[toToken], amount, 1)
                 const deadline: number = Math.floor(Date.now() / 1000) + 1000000
 
+                const txData = encodeFunctionData({
+                    abi: pancakeRouterAbi,
+                    functionName: 'exactInputSingle',
+                    args: [{
+                        tokenIn: tokens['ETH'],
+                        tokenOut: tokens[toToken],
+                        fee: 500,
+                        recipient: this.walletAddress,
+                        amountIn: amount,
+                        amountOutMinimum: minAmountOut,
+                        sqrtPriceLimitX96: BigInt(0)
+                    }]
+                })
+
                 const txHash = await this.baseWallet.writeContract({
-                    address: this.baseswapContract,
-                    abi: baseswapRouterAbi,
-                    functionName: 'swapExactETHForTokens',
+                    address: this.pancakeRouterContract,
+                    abi: pancakeRouterAbi,
+                    functionName: 'multicall',
                     args: [
-                        minAmountOut,
-                        [
-                            tokens['ETH'],
-                            tokens[toToken]
-                        ],
-                        this.walletAddress,
-                        deadline
+                        deadline,
+                        [txData]
                     ],
                     value: amount
                 })
+
                 successSwap = true
                 this.logger.info(`${this.walletAddress} | Success swap ${formatEther(amount)} ETH -> ${toToken}: https://basescan.org/tx/${txHash}`)
             } catch (e) {
@@ -95,26 +109,44 @@ export class Baseswap {
                 const minAmountOut = await this.getMinAmountOut(tokens[fromToken], tokens['ETH'], amount, 1)
                 const deadline: number = Math.floor(Date.now() / 1000) + 1000000
 
-                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.baseswapContract, amount, this.logger)
+                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.pancakeRouterContract, amount, this.logger)
 
                 const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
                 this.logger.info(`${this.walletAddress} | Waiting ${sleepTime} sec after approve before swap...`)
                 await sleep(sleepTime * 1000)
 
-                const txHash = await this.baseWallet.writeContract({
-                    address: this.baseswapContract,
-                    abi: baseswapRouterAbi,
-                    functionName: 'swapExactTokensForETH',
+                const txData = encodeFunctionData({
+                    abi: pancakeRouterAbi,
+                    functionName: 'exactInputSingle',
+                    args: [{
+                        tokenIn: tokens[fromToken],
+                        tokenOut: tokens['ETH'],
+                        fee: 500,
+                        recipient: "0x0000000000000000000000000000000000000002",
+                        amountIn: amount,
+                        amountOutMinimum: minAmountOut,
+                        sqrtPriceLimitX96: BigInt(0)
+                    }]
+                })
+
+                const unwrapData = encodeFunctionData({
+                    abi: pancakeRouterAbi,
+                    functionName: 'unwrapWETH9',
                     args: [
-                        amount,
                         minAmountOut,
-                        [
-                            tokens[fromToken],
-                            tokens['ETH']
-                        ],
-                        this.walletAddress,
-                        deadline
+                        this.walletAddress
                     ]
+                })
+
+                const txHash = await this.baseWallet.writeContract({
+                    address: this.pancakeRouterContract,
+                    abi: pancakeRouterAbi,
+                    functionName: 'multicall',
+                    args: [
+                        deadline,
+                        [txData, unwrapData]
+                    ],
+                    value: amount
                 })
 
                 successSwap = true
