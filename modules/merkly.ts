@@ -1,5 +1,5 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {formatEther, Hex, encodePacked, keccak256, parseEther} from "viem"
+import {Hex, encodePacked, parseEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { merklyAbi } from "../data/abi/merkly"
 import { random } from "../utils/common"

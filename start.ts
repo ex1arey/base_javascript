@@ -1,27 +1,29 @@
-import {balanceEth, balanceBase} from "./onchain/getBalance"
-import {getBaseWalletClient} from "./utils/baseClient"
-import {Hex} from "viem"
-import { Bridge } from "./modules/bridge"
 import { privateKeyConvert, readWallets } from "./utils/wallet"
-import { random, randomFloat, sleep } from "./utils/common"
+import { random, randomFloat, shuffle, sleep } from "./utils/common"
 import { bridgeConfig, generalConfig, mintfunConfig } from "./config"
 import { makeLogger } from "./utils/logger"
 import { entryPoint } from "./utils/menu"
+import { Bridge } from "./modules/bridge"
 import { Mintfun } from "./modules/mintfun"
 import { L2Telegraph } from "./modules/l2telegraph"
 import { Merkly } from "./modules/merkly"
+import { Baseswap } from "./modules/baseswap"
 
-const privateKeys = readWallets('./private_keys.txt')
+let privateKeys = readWallets('./private_keys.txt')
 
-async function bridge() {
+if (generalConfig.shuffleWallets) {
+    shuffle(privateKeys)
+}
+
+async function bridgeModule() {
     const logger = makeLogger("Bridge")
     for (let privateKey of privateKeys) {
         const bridge = new Bridge(privateKeyConvert(privateKey))
-        const sleepTime = random(bridgeConfig.sleep_from, bridgeConfig.sleep_to)
-        const sum = randomFloat(bridgeConfig.stargate_bridge_from, bridgeConfig.stargate_bridge_to)
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        const sum = randomFloat(bridgeConfig.stargateBridgeFrom, bridgeConfig.stargateBridgeTo)
 
         if (bridgeConfig.type === 'stargate') {
-            if (bridgeConfig.stargate_from === 'arbitrum') {
+            if (bridgeConfig.stargateFrom === 'arbitrum') {
                 await bridge.stargateArbitrumToBase(sum.toString())
             } else {
                 await bridge.stargateOptimismToBase(sum.toString())
@@ -35,14 +37,14 @@ async function bridge() {
     }
 }
 
-async function mintfun() {
+async function mintfunModule() {
     const logger = makeLogger("Mintfun")
     for (let privateKey of privateKeys) {
         const mintfun = new Mintfun(privateKeyConvert(privateKey))
-        const txCount = random(mintfunConfig.count_tx_from, mintfunConfig.count_tx_to)
+        const txCount = random(mintfunConfig.countFrom, mintfunConfig.countTo)
 
         for (let i = 1; i <= txCount; i++) {
-            const sleepTime = random(mintfunConfig.sleep_from, mintfunConfig.sleep_to)
+            const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
             await mintfun.mintRandom()
 
             if (txCount > 1) {
@@ -51,18 +53,18 @@ async function mintfun() {
             }
         }
 
-        const sleepTime = random(mintfunConfig.sleep_from, mintfunConfig.sleep_to)
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
 }
 
-async function l2telegraph() {
+async function l2telegraphModule() {
     const logger = makeLogger("L2Telegraph")
     for (let privateKey of privateKeys) {
         const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
 
-        const sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         await l2telegraph.mintAndBridge()
 
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
@@ -70,12 +72,12 @@ async function l2telegraph() {
     }
 }
 
-async function l2telegraphMessage() {
+async function l2telegraphMessageModule() {
     const logger = makeLogger("L2Telegraph")
     for (let privateKey of privateKeys) {
         const mintfun = new L2Telegraph(privateKeyConvert(privateKey))
 
-        const sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         await mintfun.sendMessage()
 
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
@@ -83,12 +85,12 @@ async function l2telegraphMessage() {
     }
 }
 
-async function merklyRefuel() {
+async function merklyRefuelModule() {
     const logger = makeLogger("Merkly")
     for (let privateKey of privateKeys) {
         const mintfun = new Merkly(privateKeyConvert(privateKey))
 
-        const sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         await mintfun.refuel()
 
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
@@ -96,7 +98,7 @@ async function merklyRefuel() {
     }
 }
 
-async function randomModule() {
+async function randomModuleModule() {
     const logger = makeLogger("Random")
     for (let privateKey of privateKeys) {
         const randomChooice = random(1, 2)
@@ -104,13 +106,27 @@ async function randomModule() {
 
         if (randomChooice === 1) {
             const mintfun = new Mintfun(privateKeyConvert(privateKey))
-            sleepTime = random(mintfunConfig.sleep_from, mintfunConfig.sleep_to)
+            sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
             await mintfun.mintRandom()
         } else {
             const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
-            sleepTime = random(generalConfig.sleep_from, generalConfig.sleep_to)
+            sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
             await l2telegraph.mintAndBridge()
         }
+
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function baseswapModule() {
+    const logger = makeLogger("Baseswap")
+    for (let privateKey of privateKeys) {
+        const baseswap = new Baseswap(privateKeyConvert(privateKey))
+
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        await baseswap.roundSwap()
+
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
@@ -120,22 +136,25 @@ async function startMenu() {
     let mode = await entryPoint()
     switch (mode) {
         case "bridge":
-            await bridge()
+            await bridgeModule()
             break
         case "merkly":
-            await merklyRefuel()
+            await merklyRefuelModule()
+            break
+        case "baseswap":
+            await baseswapModule()
             break
         case "mintfun":
-            await mintfun()
+            await mintfunModule()
             break
         case "l2telegraph":
-            await l2telegraph()
+            await l2telegraphMessageModule()
             break
         case "l2telegraph_message":
-            await l2telegraphMessage()
+            await l2telegraphMessageModule()
             break
         case "random":
-            await randomModule()
+            await randomModuleModule()
             break
     }
 }

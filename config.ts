@@ -1,17 +1,16 @@
 export const generalConfig = {
-    sleep_from: 30,
-    sleep_to: 100
+    sleepFrom: 60,
+    sleepTo: 150,
+    shuffleWallets: false
 }
 
 export const bridgeConfig = {
     type: 'stargate', // 'stargate', 'official'
-    stargate_from: 'optimism', // 'arbitrum', 'optimism'
-    bridge_from: 0.001,
-    bridge_to: 0.0012,
-    stargate_bridge_from: 0.001,
-    stargate_bridge_to: 0.002,
-    sleep_from: 30,
-    sleep_to: 100
+    stargateFrom: 'arbitrum', // 'arbitrum', 'optimism'
+    bridgeFrom: 0.001,
+    bridgeFo: 0.002,
+    stargateBridgeFrom: 0.003,
+    stargateBridgeTo: 0.004,
 }
 
 export const binance = {
@@ -20,8 +19,11 @@ export const binance = {
 }
 
 export const mintfunConfig = {
-    count_tx_from: 1,
-    count_tx_to: 2,
-    sleep_from: 30,
-    sleep_to: 100
+    countFrom: 1,
+    countTo: 2
+}
+
+export const swapConfig = {
+    swapEthPercentFrom: 50,
+    swapEthPercentTo: 60
 }
