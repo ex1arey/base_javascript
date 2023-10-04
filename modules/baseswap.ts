@@ -1,5 +1,5 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, encodePacked, parseEther} from "viem"
+import {Hex, encodePacked, formatEther, parseEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, sleep } from "../utils/common"
 import { tokens } from "../data/base-tokens"
@@ -43,7 +43,7 @@ export class Baseswap {
     }
 
     async swapEthToToken(toToken: string = 'USDC', amount: bigint) {
-        this.logger.info(`${this.walletAddress} | Swap ETH -> ${toToken}`)
+        this.logger.info(`${this.walletAddress} | Swap ${formatEther(amount)} ETH -> ${toToken}`)
         let successSwap: boolean = false
         let retryCount = 1
 
@@ -68,7 +68,7 @@ export class Baseswap {
                     value: amount
                 })
                 successSwap = true
-                this.logger.info(`${this.walletAddress} | Success swap ETH -> ${toToken}: https://basescan.org/tx/${txHash}`)
+                this.logger.info(`${this.walletAddress} | Success swap ${formatEther(amount)} ETH -> ${toToken}: https://basescan.org/tx/${txHash}`)
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e}`)
                 if (retryCount <= 3) {
@@ -84,10 +84,11 @@ export class Baseswap {
     }
 
     async swapTokenToEth(fromToken: string = 'USDC') {
-        this.logger.info(`${this.walletAddress} | Swap ${fromToken} -> ETH`)
         let amount = await getTokenBalance(this.baseClient, tokens[fromToken], this.walletAddress)
         let successSwap: boolean = false
         let retryCount = 1
+
+        this.logger.info(`${this.walletAddress} | Swap ${formatEther(amount)} ${fromToken} -> ETH`)
 
         while (!successSwap) {
             try {
