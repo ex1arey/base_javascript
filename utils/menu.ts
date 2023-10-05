@@ -8,6 +8,14 @@ export const entryPoint = async () => {
             message: "Действие:",
             choices: [
                 {
+                    name: "Random module",
+                    value: "random",
+                },
+                {
+                    name: "Random swap module",
+                    value: "random_swap",
+                },
+                {
                     name: "Bridge",
                     value: "bridge",
                 },
@@ -16,16 +24,28 @@ export const entryPoint = async () => {
                     value: "merkly",
                 },
                 {
-                    name: "Uniswap [ETH -> Random stable -> ETH]",
+                    name: "Baseswap",
+                    value: "baseswap",
+                },
+                {
+                    name: "Woofi",
+                    value: "woofi",
+                },
+                {
+                    name: "Uniswap",
                     value: "uniswap",
                 },
                 {
-                    name: "Pancake [ETH -> Random stable -> ETH]",
+                    name: "Pancake",
                     value: "pancake",
                 },
                 {
-                    name: "Baseswap [ETH -> Random stable -> ETH]",
-                    value: "baseswap",
+                    name: "Odos",
+                    value: "odos",
+                },
+                {
+                    name: "Aave",
+                    value: "aave",
                 },
                 {
                     name: "Mintfun",
@@ -40,11 +60,10 @@ export const entryPoint = async () => {
                     value: "l2telegraph_message",
                 },
                 {
-                    name: "Random (mintfun + l2telegraph) $0.05 - $0.40",
-                    value: "random",
+                    name: "Swap all stables to ETH",
+                    value: "stable_to_eth",
                 },
             ],
-            default: "bridge",
             loop: false,
         },
     ]

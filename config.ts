@@ -6,7 +6,7 @@ export const generalConfig = {
 
 export const bridgeConfig = {
     type: 'stargate', // 'stargate', 'official'
-    stargateFrom: 'arbitrum', // 'arbitrum', 'optimism'
+    stargateFrom: 'arbitrum', // 'arbitrum', 'optimism', 'random'
     bridgeFrom: 0.001,
     bridgeFo: 0.002,
     stargateBridgeFrom: 0.003,
@@ -24,6 +24,16 @@ export const mintfunConfig = {
 }
 
 export const swapConfig = {
-    swapEthPercentFrom: 50,
-    swapEthPercentTo: 60
+    swapEthPercentFrom: 20,
+    swapEthPercentTo: 30
+}
+
+export const aaveConfig = {
+    depositEthPercentFrom: 20,
+    depositEthPercentTo: 30,
+    makeWithdraw: true
+}
+
+export const odosConfig = {
+    useReferral: true
 }

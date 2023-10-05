@@ -10,6 +10,11 @@ import { Merkly } from "./modules/merkly"
 import { Baseswap } from "./modules/baseswap"
 import { Pancake } from "./modules/pancake"
 import { Uniswap } from "./modules/uniswap"
+import { Woofi } from "./modules/woofi"
+import { Aave } from "./modules/aave"
+import { Odos } from "./modules/odos"
+import { getTokenBalance } from "./utils/tokenBalance"
+import { getPublicBaseClient } from "./utils/baseClient"
 
 let privateKeys = readWallets('./private_keys.txt')
 
@@ -27,8 +32,15 @@ async function bridgeModule() {
         if (bridgeConfig.type === 'stargate') {
             if (bridgeConfig.stargateFrom === 'arbitrum') {
                 await bridge.stargateArbitrumToBase(sum.toString())
-            } else {
+            } else if (bridgeConfig.stargateFrom === 'optimism') {
                 await bridge.stargateOptimismToBase(sum.toString())
+            } else if (bridgeConfig.stargateFrom === 'random') {
+                const randomChooice: number = random(1, 2)
+                if (randomChooice === 1) {
+                    await bridge.stargateArbitrumToBase(sum.toString())
+                } else {
+                    await bridge.stargateOptimismToBase(sum.toString())
+                }
             }
         } else {
             await bridge.bridge(sum.toString())
@@ -65,10 +77,9 @@ async function l2telegraphModule() {
     const logger = makeLogger("L2Telegraph")
     for (let privateKey of privateKeys) {
         const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
-
-        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         await l2telegraph.mintAndBridge()
-
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
@@ -77,11 +88,10 @@ async function l2telegraphModule() {
 async function l2telegraphMessageModule() {
     const logger = makeLogger("L2Telegraph")
     for (let privateKey of privateKeys) {
-        const mintfun = new L2Telegraph(privateKeyConvert(privateKey))
-
+        const l2telegraphMessage = new L2Telegraph(privateKeyConvert(privateKey))
+        await l2telegraphMessage.sendMessage()
+        
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
-        await mintfun.sendMessage()
-
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
@@ -90,32 +100,10 @@ async function l2telegraphMessageModule() {
 async function merklyRefuelModule() {
     const logger = makeLogger("Merkly")
     for (let privateKey of privateKeys) {
-        const mintfun = new Merkly(privateKeyConvert(privateKey))
-
+        const merkly = new Merkly(privateKeyConvert(privateKey))
+        await merkly.refuel()
+        
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
-        await mintfun.refuel()
-
-        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
-        await sleep(sleepTime * 1000)
-    }
-}
-
-async function randomModuleModule() {
-    const logger = makeLogger("Random")
-    for (let privateKey of privateKeys) {
-        const randomChooice = random(1, 2)
-        let sleepTime
-
-        if (randomChooice === 1) {
-            const mintfun = new Mintfun(privateKeyConvert(privateKey))
-            sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
-            await mintfun.mintRandom()
-        } else {
-            const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
-            sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
-            await l2telegraph.mintAndBridge()
-        }
-
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
@@ -125,10 +113,9 @@ async function baseswapModule() {
     const logger = makeLogger("Baseswap")
     for (let privateKey of privateKeys) {
         const baseswap = new Baseswap(privateKeyConvert(privateKey))
-
-        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         await baseswap.roundSwap()
-
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
@@ -138,23 +125,160 @@ async function pancakeModule() {
     const logger = makeLogger("Pancake")
     for (let privateKey of privateKeys) {
         const pancake = new Pancake(privateKeyConvert(privateKey))
-
-        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         await pancake.roundSwap()
-
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
 }
 
 async function uniswapModule() {
-    const logger = makeLogger("uniswap")
+    const logger = makeLogger("Uniswap")
     for (let privateKey of privateKeys) {
         const uniswap = new Uniswap(privateKeyConvert(privateKey))
+        await uniswap.roundSwap()
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function woofiModule() {
+    const logger = makeLogger("Woofi")
+    for (let privateKey of privateKeys) {
+        const woofi = new Woofi(privateKeyConvert(privateKey))
+        await woofi.roundSwap()
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function odosModule() {
+    const logger = makeLogger("Odos")
+    for (let privateKey of privateKeys) {
+        const odos = new Odos(privateKeyConvert(privateKey))
+        await odos.roundSwap()
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function aaveModule() {
+    const logger = makeLogger("Aave")
+    for (let privateKey of privateKeys) {
+        const aave = new Aave(privateKeyConvert(privateKey))
+        await aave.run()
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function randomModule() {
+    const logger = makeLogger("Random")
+    for (let privateKey of privateKeys) {
+        const randomChooice = random(1, 10)
+        let sleepTime
+
+        switch (randomChooice) {
+            case 1:
+                const mintfun = new Mintfun(privateKeyConvert(privateKey))
+                await mintfun.mintRandom()
+                break
+            case 2:
+                const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
+                await l2telegraph.mintAndBridge()
+                break
+            case 3:
+                const l2telegraphMessage = new L2Telegraph(privateKeyConvert(privateKey))
+                await l2telegraphMessage.sendMessage()
+                break
+            case 4:
+                const merkly = new Merkly(privateKeyConvert(privateKey))
+                await merkly.refuel()
+                break
+            case 5:
+                const baseswap = new Baseswap(privateKeyConvert(privateKey))
+                await baseswap.roundSwap()
+                break
+            case 6:
+                const pancake = new Pancake(privateKeyConvert(privateKey))
+                await pancake.roundSwap()
+                break
+            case 7:
+                const uniswap = new Uniswap(privateKeyConvert(privateKey))
+                await uniswap.roundSwap()
+                break
+            case 8:
+                const woofi = new Woofi(privateKeyConvert(privateKey))
+                await woofi.roundSwap()
+                break
+            case 9:
+                const odos = new Odos(privateKeyConvert(privateKey))
+                await odos.roundSwap()
+                break
+            case 10:
+                const aave = new Aave(privateKeyConvert(privateKey))
+                await aave.run()
+                break
+        }
+
+        sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function randomSwapModule() {
+    const logger = makeLogger("Random swap")
+    for (let privateKey of privateKeys) {
+        const randomChooice = random(1, 5)
+        let sleepTime
+
+        switch (randomChooice) {
+            case 1:
+                const baseswap = new Baseswap(privateKeyConvert(privateKey))
+                await baseswap.roundSwap()
+                break
+            case 2:
+                const pancake = new Pancake(privateKeyConvert(privateKey))
+                await pancake.roundSwap()
+                break
+            case 3:
+                const uniswap = new Uniswap(privateKeyConvert(privateKey))
+                await uniswap.roundSwap()
+                break
+            case 4:
+                const woofi = new Woofi(privateKeyConvert(privateKey))
+                await woofi.roundSwap()
+                break
+            case 5:
+                const odos = new Odos(privateKeyConvert(privateKey))
+                await odos.roundSwap()
+                break
+        }
+
+        sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function stableSwapModule() {
+    const logger = makeLogger("StableSwap")
+    for (let privateKey of privateKeys) {
+        const pancake = new Pancake(privateKeyConvert(privateKey))
+
+        await pancake.swapStablesToEth()
 
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
-        await uniswap.roundSwap()
-
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
         await sleep(sleepTime * 1000)
     }
@@ -169,6 +293,12 @@ async function startMenu() {
         case "merkly":
             await merklyRefuelModule()
             break
+        case "aave":
+            await aaveModule()
+            break
+        case "odos":
+            await odosModule()
+            break
         case "pancake":
             await pancakeModule()
             break
@@ -178,17 +308,26 @@ async function startMenu() {
         case "baseswap":
             await baseswapModule()
             break
+        case "woofi":
+            await woofiModule()
+            break
         case "mintfun":
             await mintfunModule()
             break
         case "l2telegraph":
-            await l2telegraphMessageModule()
+            await l2telegraphModule()
             break
         case "l2telegraph_message":
             await l2telegraphMessageModule()
             break
         case "random":
-            await randomModuleModule()
+            await randomModule()
+            break
+        case "random_swap":
+            await randomSwapModule()
+            break
+        case "stable_to_eth":
+            await stableSwapModule()
             break
     }
 }

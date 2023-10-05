@@ -14,7 +14,7 @@ export class Binance {
         axios.post(this.binanceEndpoint+queryParams, {
             coin: 'ETH',
             network: 'Base',
-            address: '0x2300f68064BfaafA381cd36f2695CDfEAAc09231',
+            address: '',
             amount: amount
         }, {
             headers: {

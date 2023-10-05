@@ -6,16 +6,12 @@ import { tokens } from "../data/base-tokens"
 import { approve } from "../utils/approve"
 import { getTokenBalance } from "../utils/tokenBalance"
 import { generalConfig, swapConfig } from "../config"
-import { pancakeFactoryAbi } from "../data/abi/pancake_factory"
-import { pancakeQuouterAbi } from "../data/abi/pancake_quoter"
-import { pancakeRouterAbi } from "../data/abi/pancake_router"
+import { woofiRouterAbi } from "../data/abi/woofi_router"
 
-export class Pancake {
+export class Woofi {
     privateKey: Hex
     logger: any
-    pancakeRouterContract: Hex = '0x678Aa4bF4E210cf2166753e054d5b7c31cc7fa86'
-    pancakeFactoryContract: Hex = '0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865'
-    pancakeQuoterContract: Hex = '0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997'
+    woofiRouterContract: Hex = '0x27425e9fb6a9a625e8484cfd9620851d1fa322e5'
     randomNetwork: any
     baseClient: any
     baseWallet: any
@@ -23,7 +19,7 @@ export class Pancake {
 
     constructor(privateKey:Hex) {
         this.privateKey = privateKey
-        this.logger = makeLogger("Pancake")
+        this.logger = makeLogger("Woofi")
         this.baseClient = getPublicBaseClient()
         this.baseWallet = getBaseWalletClient(privateKey)
         this.walletAddress = this.baseWallet.account.address
@@ -31,19 +27,17 @@ export class Pancake {
 
     async getMinAmountOut(fromToken: Hex, toToken: Hex, amount: BigInt, slippage: number) {
         const minAmountOut = await this.baseClient.readContract({
-            address: this.pancakeQuoterContract,
-            abi: pancakeQuouterAbi,
-            functionName: 'quoteExactInputSingle',
-            args: [{
-                tokenIn: fromToken,
-                tokenOut: toToken,
-                amountIn: amount,
-                fee: 500,
-                sqrtPriceLimitX96: BigInt(0)
-            }]
+            address: this.woofiRouterContract,
+            abi: woofiRouterAbi,
+            functionName: 'querySwap',
+            args: [
+                fromToken,
+                toToken,
+                amount
+            ]
         })
 
-        return BigInt(Math.round(Number(minAmountOut[0]) - (Number(minAmountOut[0]) / 100 * slippage)))
+        return BigInt(Math.round(Number(minAmountOut) - (Number(minAmountOut) / 100 * slippage)))
     }
 
     async swapEthToToken(toToken: string = 'USDC', amount: bigint) {
@@ -51,32 +45,21 @@ export class Pancake {
         let successSwap: boolean = false
         let retryCount = 1
 
+        const minAmountOut = await this.getMinAmountOut(tokens['ETH_native'], tokens[toToken], amount, 1)
+
         while (!successSwap) {
             try {
-                const minAmountOut = await this.getMinAmountOut(tokens['ETH'], tokens[toToken], amount, 1)
-                const deadline: number = Math.floor(Date.now() / 1000) + 1000000
-
-                const txData = encodeFunctionData({
-                    abi: pancakeRouterAbi,
-                    functionName: 'exactInputSingle',
-                    args: [{
-                        tokenIn: tokens['ETH'],
-                        tokenOut: tokens[toToken],
-                        fee: 500,
-                        recipient: this.walletAddress,
-                        amountIn: amount,
-                        amountOutMinimum: minAmountOut,
-                        sqrtPriceLimitX96: BigInt(0)
-                    }]
-                })
-
                 const txHash = await this.baseWallet.writeContract({
-                    address: this.pancakeRouterContract,
-                    abi: pancakeRouterAbi,
-                    functionName: 'multicall',
+                    address: this.woofiRouterContract,
+                    abi: woofiRouterAbi,
+                    functionName: 'swap',
                     args: [
-                        deadline,
-                        [txData]
+                        tokens['ETH_native'],
+                        tokens[toToken],
+                        amount,
+                        minAmountOut,
+                        this.walletAddress,
+                        this.walletAddress
                     ],
                     value: amount
                 })
@@ -106,45 +89,25 @@ export class Pancake {
 
         while (!successSwap) {
             try {
-                const minAmountOut = await this.getMinAmountOut(tokens[fromToken], tokens['ETH'], amount, 1)
-                const deadline: number = Math.floor(Date.now() / 1000) + 1000000
+                const minAmountOut = await this.getMinAmountOut(tokens[fromToken], tokens['ETH_native'], amount, 1)
 
-                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.pancakeRouterContract, amount, this.logger)
+                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.woofiRouterContract, amount, this.logger)
 
                 const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
                 this.logger.info(`${this.walletAddress} | Waiting ${sleepTime} sec after approve before swap...`)
                 await sleep(sleepTime * 1000)
 
-                const txData = encodeFunctionData({
-                    abi: pancakeRouterAbi,
-                    functionName: 'exactInputSingle',
-                    args: [{
-                        tokenIn: tokens[fromToken],
-                        tokenOut: tokens['ETH'],
-                        fee: 500,
-                        recipient: "0x0000000000000000000000000000000000000002",
-                        amountIn: amount,
-                        amountOutMinimum: minAmountOut,
-                        sqrtPriceLimitX96: BigInt(0)
-                    }]
-                })
-
-                const unwrapData = encodeFunctionData({
-                    abi: pancakeRouterAbi,
-                    functionName: 'unwrapWETH9',
-                    args: [
-                        minAmountOut,
-                        this.walletAddress
-                    ]
-                })
-
                 const txHash = await this.baseWallet.writeContract({
-                    address: this.pancakeRouterContract,
-                    abi: pancakeRouterAbi,
-                    functionName: 'multicall',
+                    address: this.woofiRouterContract,
+                    abi: woofiRouterAbi,
+                    functionName: 'swap',
                     args: [
-                        deadline,
-                        [txData, unwrapData]
+                        tokens[fromToken],
+                        tokens['ETH_native'],
+                        amount,
+                        minAmountOut,
+                        this.walletAddress,
+                        this.walletAddress
                     ]
                 })
 
@@ -167,8 +130,7 @@ export class Pancake {
     async roundSwap() {
         const randomPercent: number = random(swapConfig.swapEthPercentFrom, swapConfig.swapEthPercentTo) / 100
         const ethBalance: bigint = await this.baseClient.getBalance({ address: this.walletAddress })
-        const randomChooice: number = random(1, 2)
-        const randomStable = randomChooice > 1 ? 'USDC' : 'DAI'
+        const randomStable = 'USDC'
         let amount: bigint = BigInt(Math.round(Number(ethBalance) * randomPercent))
         const sleepTimeTo = random(generalConfig.sleepFrom, generalConfig.sleepTo)
 
@@ -178,20 +140,5 @@ export class Pancake {
         await sleep(sleepTimeTo * 1000)
 
         await this.swapTokenToEth(randomStable)
-    }
-
-    async swapStablesToEth() {
-        let amountUSDC = await getTokenBalance(this.baseClient, tokens['USDC'], this.walletAddress)
-        let amountDAI = await getTokenBalance(this.baseClient, tokens['DAI'], this.walletAddress)
-        if (amountUSDC > 0) {
-            await this.swapTokenToEth('USDC')
-            const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
-            this.logger.info(`${this.walletAddress} | Waiting ${sleepTime} sec until next swap...`)
-            await sleep(sleepTime * 1000)
-        }
-
-        if (amountDAI > 0) {
-            await this.swapTokenToEth('DAI')
-        }
     }
 }
