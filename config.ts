@@ -1,16 +1,17 @@
 export const generalConfig = {
     sleepFrom: 60,
     sleepTo: 150,
-    shuffleWallets: false
+    shuffleWallets: true
 }
 
 export const bridgeConfig = {
     type: 'stargate', // 'stargate', 'official'
     stargateFrom: 'arbitrum', // 'arbitrum', 'optimism', 'random'
     bridgeFrom: 0.001,
-    bridgeFo: 0.002,
+    bridgeTo: 0.002,
     stargateBridgeFrom: 0.003,
     stargateBridgeTo: 0.004,
+    maxGas: 10 // for official bridge Eth -> Base
 }
 
 export const binance = {

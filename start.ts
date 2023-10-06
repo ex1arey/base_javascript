@@ -15,6 +15,7 @@ import { Aave } from "./modules/aave"
 import { Odos } from "./modules/odos"
 import { getTokenBalance } from "./utils/tokenBalance"
 import { getPublicBaseClient } from "./utils/baseClient"
+import { waitGas } from "./utils/getCurrentGas"
 
 let privateKeys = readWallets('./private_keys.txt')
 
@@ -43,7 +44,10 @@ async function bridgeModule() {
                 }
             }
         } else {
-            await bridge.bridge(sum.toString())
+            const officialBridgeSum = randomFloat(bridgeConfig.bridgeFrom, bridgeConfig.bridgeTo)
+            if (await waitGas()) {
+                await bridge.bridge(officialBridgeSum.toString())
+            }
         }
         
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
