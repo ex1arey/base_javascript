@@ -16,6 +16,10 @@ export const entryPoint = async () => {
                     value: "random_swap",
                 },
                 {
+                    name: "Random L0 module",
+                    value: "random_l0",
+                },
+                {
                     name: "Bridge",
                     value: "bridge",
                 },

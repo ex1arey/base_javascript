@@ -275,6 +275,33 @@ async function randomSwapModule() {
     }
 }
 
+async function randomL0Module() {
+    const logger = makeLogger("Random L0")
+    for (let privateKey of privateKeys) {
+        const randomChooice = random(1, 3)
+        let sleepTime
+
+        switch (randomChooice) {
+            case 1:
+                const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
+                await l2telegraph.mintAndBridge()
+                break
+            case 2:
+                const l2telegraphMessage = new L2Telegraph(privateKeyConvert(privateKey))
+                await l2telegraphMessage.sendMessage()
+                break
+            case 3:
+                const merkly = new Merkly(privateKeyConvert(privateKey))
+                await merkly.refuel()
+                break
+        }
+
+        sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function stableSwapModule() {
     const logger = makeLogger("StableSwap")
     for (let privateKey of privateKeys) {
@@ -329,6 +356,9 @@ async function startMenu() {
             break
         case "random_swap":
             await randomSwapModule()
+            break
+        case "random_l0":
+            await randomL0Module()
             break
         case "stable_to_eth":
             await stableSwapModule()
