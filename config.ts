@@ -36,5 +36,6 @@ export const aaveConfig = {
 }
 
 export const odosConfig = {
+    useProxy: false,
     useReferral: true
 }

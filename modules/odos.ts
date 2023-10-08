@@ -2,12 +2,13 @@ import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
 import {Hex, PrivateKeyAccount, formatEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, sleep } from "../utils/common"
-import { aaveConfig, generalConfig, odosConfig, swapConfig } from "../config"
+import { generalConfig, odosConfig, swapConfig } from "../config"
 import { approve } from "../utils/approve"
 import axios from "axios"
 import { tokens } from "../data/base-tokens"
 import { getTokenBalance } from "../utils/tokenBalance"
 import { privateKeyToAccount } from "viem/accounts"
+import { HttpsProxyAgent } from "https-proxy-agent"
 
 export class Odos {
     privateKey: Hex
@@ -18,6 +19,7 @@ export class Odos {
     baseWallet: any
     walletAddress: Hex
     account: PrivateKeyAccount
+    proxy: string|null = null
 
     constructor(privateKey:Hex) {
         this.privateKey = privateKey
@@ -30,6 +32,11 @@ export class Odos {
 
     async quote(fromToken: Hex, toToken: Hex, amount: bigint, slippage: number) {
         let pathId:number = 0
+        let agent:any
+        if (this.proxy) {
+            agent = new HttpsProxyAgent(this.proxy)
+        }
+        
         await axios.post('https://api.odos.xyz/sor/quote/v2', {
             chainId: 8453,
             inputTokens: [
@@ -48,6 +55,8 @@ export class Odos {
             referralCode: odosConfig.useReferral ? 2485206569 : 0,
             compact: true,
             slippageLimitPercent: slippage
+        }, {
+            httpAgent: this.proxy ? agent : null
         }).then(response => {
             pathId = response.data.pathId
         }).catch(e => {
@@ -59,9 +68,16 @@ export class Odos {
 
     async assemble(pathId: any) {
         let data: any
+        let agent:any
+        if (this.proxy) {
+            agent = new HttpsProxyAgent(this.proxy)
+        }
+        
         await axios.post('https://api.odos.xyz/sor/assemble', {
             userAddr: this.walletAddress,
             pathId: pathId
+        }, {
+            httpAgent: this.proxy ? agent : null
         }).then(response => {
             data = response.data.transaction
         }).catch(e => {
@@ -136,7 +152,8 @@ export class Odos {
         }
     }
 
-    async roundSwap() {
+    async roundSwap(proxy:string|null = null) {
+        this.proxy = proxy
         const randomPercent: number = random(swapConfig.swapEthPercentFrom, swapConfig.swapEthPercentTo) / 100
         const ethBalance: bigint = await this.baseClient.getBalance({ address: this.walletAddress })
         const randomChooice: number = random(1, 2)

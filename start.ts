@@ -1,6 +1,6 @@
 import { privateKeyConvert, readWallets } from "./utils/wallet"
 import { random, randomFloat, shuffle, sleep } from "./utils/common"
-import { bridgeConfig, generalConfig, mintfunConfig } from "./config"
+import { bridgeConfig, generalConfig, mintfunConfig, odosConfig } from "./config"
 import { makeLogger } from "./utils/logger"
 import { entryPoint } from "./utils/menu"
 import { Bridge } from "./modules/bridge"
@@ -13,14 +13,17 @@ import { Uniswap } from "./modules/uniswap"
 import { Woofi } from "./modules/woofi"
 import { Aave } from "./modules/aave"
 import { Odos } from "./modules/odos"
-import { getTokenBalance } from "./utils/tokenBalance"
-import { getPublicBaseClient } from "./utils/baseClient"
 import { waitGas } from "./utils/getCurrentGas"
 
 let privateKeys = readWallets('./private_keys.txt')
 
 if (generalConfig.shuffleWallets) {
     shuffle(privateKeys)
+}
+
+let proxies: Array<string|null>
+if (odosConfig.useProxy) {
+    proxies = readWallets('./proxies.txt')
 }
 
 async function bridgeModule() {
@@ -163,9 +166,9 @@ async function woofiModule() {
 
 async function odosModule() {
     const logger = makeLogger("Odos")
-    for (let privateKey of privateKeys) {
+    for (const [index, privateKey] of privateKeys.entries()) {
         const odos = new Odos(privateKeyConvert(privateKey))
-        await odos.roundSwap()
+        await odos.roundSwap(odosConfig.useProxy ? proxies[index] : null)
         
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
