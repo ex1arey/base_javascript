@@ -6,7 +6,8 @@ import { tokens } from "../data/base-tokens"
 import { baseswapRouterAbi } from "../data/abi/baseswap_router"
 import { approve } from "../utils/approve"
 import { getTokenBalance } from "../utils/tokenBalance"
-import { generalConfig, swapConfig } from "../config"
+import { binanceConfig, generalConfig, swapConfig } from "../config"
+import { refill } from "../utils/refill"
 
 export class Baseswap {
     privateKey: Hex
@@ -72,6 +73,12 @@ export class Baseswap {
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e}`)
                 if (retryCount <= 3) {
+                    if (retryCount == 1) {
+                        if ((e.shortMessage.includes('insufficient funds') || e.shortMessage.includes('exceeds the balance')) && binanceConfig.useRefill) {
+                            await refill(this.privateKey)
+                        }
+                    }
+
                     this.logger.info(`${this.walletAddress} | Wait 30 sec and retry swap ${retryCount}/3`)
                     retryCount++
                     await sleep(30 * 1000)
@@ -122,6 +129,12 @@ export class Baseswap {
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e}`)
                 if (retryCount <= 3) {
+                    if (retryCount == 1) {
+                        if ((e.shortMessage.includes('insufficient funds') || e.shortMessage.includes('exceeds the balance')) && binanceConfig.useRefill) {
+                            await refill(this.privateKey)
+                        }
+                    }
+                    
                     this.logger.info(`${this.walletAddress} | Wait 30 sec and retry swap ${retryCount}/3`)
                     retryCount++
                     await sleep(30 * 1000)

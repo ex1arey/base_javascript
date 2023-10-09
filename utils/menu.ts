@@ -24,6 +24,10 @@ export const entryPoint = async () => {
                     value: "bridge",
                 },
                 {
+                    name: "Binance withdraw",
+                    value: "binance",
+                },
+                {
                     name: "Merkly",
                     value: "merkly",
                 },

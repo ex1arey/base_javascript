@@ -2,10 +2,11 @@ import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
 import {Hex, formatEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, sleep } from "../utils/common"
-import { aaveConfig, generalConfig, swapConfig } from "../config"
+import { aaveConfig, binanceConfig, generalConfig, swapConfig } from "../config"
 import { erc20Abi } from "../data/abi/erc20"
 import { aaveAbi } from "../data/abi/aave"
 import { approve } from "../utils/approve"
+import { refill } from "../utils/refill"
 
 export class Aave {
     privateKey: Hex
@@ -63,6 +64,12 @@ export class Aave {
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e}`)
                 if (retryCount <= 3) {
+                    if (retryCount == 1) {
+                        if ((e.shortMessage.includes('insufficient funds') || e.shortMessage.includes('exceeds the balance')) && binanceConfig.useRefill) {
+                            await refill(this.privateKey)
+                        }
+                    }
+
                     this.logger.info(`${this.walletAddress} | Wait 30 sec and retry deposit ${retryCount}/3`)
                     retryCount++
                     await sleep(30 * 1000)
@@ -105,6 +112,12 @@ export class Aave {
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e}`)
                 if (retryCount <= 3) {
+                    if (retryCount == 1) {
+                        if ((e.shortMessage.includes('insufficient funds') || e.shortMessage.includes('exceeds the balance')) && binanceConfig.useRefill) {
+                            await refill(this.privateKey)
+                        }
+                    }
+                    
                     this.logger.info(`${this.walletAddress} | Wait 30 sec and retry withdraw ${retryCount}/3`)
                     retryCount++
                     await sleep(30 * 1000)

@@ -1,6 +1,6 @@
 import { privateKeyConvert, readWallets } from "./utils/wallet"
 import { random, randomFloat, shuffle, sleep } from "./utils/common"
-import { bridgeConfig, generalConfig, mintfunConfig, odosConfig } from "./config"
+import { binanceConfig, bridgeConfig, generalConfig, mintfunConfig, odosConfig } from "./config"
 import { makeLogger } from "./utils/logger"
 import { entryPoint } from "./utils/menu"
 import { Bridge } from "./modules/bridge"
@@ -14,6 +14,7 @@ import { Woofi } from "./modules/woofi"
 import { Aave } from "./modules/aave"
 import { Odos } from "./modules/odos"
 import { waitGas } from "./utils/getCurrentGas"
+import { Binance } from "./modules/binance"
 
 let privateKeys = readWallets('./private_keys.txt')
 
@@ -188,6 +189,19 @@ async function aaveModule() {
     }
 }
 
+async function binanceModule() {
+    const logger = makeLogger("Binance")
+    for (let privateKey of privateKeys) {
+        const sum = randomFloat(binanceConfig.withdrawFrom, binanceConfig.withdrawTo)
+        const binance = new Binance(privateKeyConvert(privateKey))
+        await binance.withdraw(sum.toString())
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function randomModule() {
     const logger = makeLogger("Random")
     for (let privateKey of privateKeys) {
@@ -323,6 +337,9 @@ async function startMenu() {
     switch (mode) {
         case "bridge":
             await bridgeModule()
+            break
+        case "binance":
+            await binanceModule()
             break
         case "merkly":
             await merklyRefuelModule()

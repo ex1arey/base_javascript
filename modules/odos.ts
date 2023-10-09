@@ -2,13 +2,14 @@ import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
 import {Hex, PrivateKeyAccount, formatEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, sleep } from "../utils/common"
-import { generalConfig, odosConfig, swapConfig } from "../config"
+import { binanceConfig, generalConfig, odosConfig, swapConfig } from "../config"
 import { approve } from "../utils/approve"
 import axios from "axios"
 import { tokens } from "../data/base-tokens"
 import { getTokenBalance } from "../utils/tokenBalance"
 import { privateKeyToAccount } from "viem/accounts"
 import { HttpsProxyAgent } from "https-proxy-agent"
+import { refill } from "../utils/refill"
 
 export class Odos {
     privateKey: Hex
@@ -72,7 +73,7 @@ export class Odos {
         if (this.proxy) {
             agent = new HttpsProxyAgent(this.proxy)
         }
-        
+
         await axios.post('https://api.odos.xyz/sor/assemble', {
             userAddr: this.walletAddress,
             pathId: pathId
@@ -105,6 +106,12 @@ export class Odos {
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e}`)
                 if (retryCount <= 3) {
+                    if (retryCount == 1) {
+                        if ((e.shortMessage.includes('insufficient funds') || e.shortMessage.includes('exceeds the balance')) && binanceConfig.useRefill) {
+                            await refill(this.privateKey)
+                        }
+                    }
+
                     this.logger.info(`${this.walletAddress} | Wait 30 sec and retry swap ${retryCount}/3`)
                     retryCount++
                     await sleep(30 * 1000)
@@ -141,6 +148,11 @@ export class Odos {
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e}`)
                 if (retryCount <= 3) {
+                    if (retryCount == 1) {
+                        if ((e.shortMessage.includes('insufficient funds') || e.shortMessage.includes('exceeds the balance')) && binanceConfig.useRefill) {
+                            await refill(this.privateKey)
+                        }
+                    }
                     this.logger.info(`${this.walletAddress} | Wait 30 sec and retry swap ${retryCount}/3`)
                     retryCount++
                     await sleep(30 * 1000)

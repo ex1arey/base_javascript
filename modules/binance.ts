@@ -1,25 +1,46 @@
-import { binance } from '../config'
+import { binanceConfig } from '../config'
 import axios from 'axios'
 import crypto from 'crypto'
+import { Hex } from 'viem'
+import { makeLogger } from '../utils/logger'
+import { getBaseWalletClient } from '../utils/baseClient'
+import { response } from 'express'
 
 export class Binance {
     binanceEndpoint:string = 'https://api.binance.com/sapi/v1/capital/withdraw/apply'
+    privateKey: Hex
+    logger: any
+    baseWallet: any
+    walletAddress: Hex
+
+    constructor(privateKey:Hex) {
+        this.privateKey = privateKey
+        this.logger = makeLogger("Binance")
+        this.baseWallet = getBaseWalletClient(privateKey)
+        this.walletAddress = this.baseWallet.account.address
+    }
 
     async withdraw(amount: string) {
         const timestamp = Date.now()
-        const queryString = `timestamp=${timestamp}`
-        const signature = crypto.createHmac('sha256', binance.secret).update(`timestamp=${timestamp}`).digest('hex')
+        const queryString = `timestamp=${timestamp}&coin=ETH&network=Base&address=${this.walletAddress}&amount=${parseFloat(amount).toFixed(5)}`
+        const signature = crypto.createHmac('sha256', binanceConfig.secret).update(queryString).digest('hex')
         const queryParams = `?${queryString}&signature=${signature}`
-        
+
+        this.logger.info(`${this.walletAddress} | Binance withdraw ${parseFloat(amount).toFixed(5)} ETH`)
+
         axios.post(this.binanceEndpoint+queryParams, {
             coin: 'ETH',
             network: 'Base',
-            address: '',
-            amount: amount
+            address: this.walletAddress,
+            amount: parseFloat(amount).toFixed(5)
         }, {
             headers: {
-                'X-MBX-APIKEY': binance.key
+                'X-MBX-APIKEY': binanceConfig.key
             }
+        }).then(response => {
+            this.logger.info(`${this.walletAddress} | Binance withdraw success`)
+        }).catch(e => {
+            this.logger.info(`${this.walletAddress} | Binance withdraw error: ${e.toString()}`)
         })
     }
 }

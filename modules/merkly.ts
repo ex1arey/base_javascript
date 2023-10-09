@@ -2,7 +2,9 @@ import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
 import {Hex, encodePacked, parseEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { merklyAbi } from "../data/abi/merkly"
-import { random } from "../utils/common"
+import { random, sleep } from "../utils/common"
+import { binanceConfig } from "../config"
+import { refill } from "../utils/refill"
 
 export class Merkly {
     privateKey: Hex
@@ -71,39 +73,59 @@ export class Merkly {
         this.logger.info(`${this.walletAddress} | Refuel to ${this.randomNetwork.name}`)
         let amount = BigInt(parseEther('0.00001'))
 
-        try {
-            const adapterParams = encodePacked(
-                [
-                    "uint16", 
-                    "uint", 
-                    "uint", 
-                    "address"
-                ], 
-                [
-                    2, 
-                    BigInt('200000'),
-                    amount,
-                    this.walletAddress
-                ]
-            )
+        let isSuccess = false
+        let retryCount = 1
 
-            let value = await this.estimateLayerzeroFee(adapterParams)
+        while (!isSuccess) {
+            try {
+                const adapterParams = encodePacked(
+                    [
+                        "uint16", 
+                        "uint", 
+                        "uint", 
+                        "address"
+                    ], 
+                    [
+                        2, 
+                        BigInt('200000'),
+                        amount,
+                        this.walletAddress
+                    ]
+                )
 
-            const txHash = await this.baseWallet.writeContract({
-                address: this.merklyContract,
-                abi: merklyAbi,
-                functionName: 'bridgeGas',
-                args: [
-                    this.destNetwork,
-                    this.walletAddress,
-                    adapterParams
-                ],
-                value: value
-            })
+                let value = await this.estimateLayerzeroFee(adapterParams)
 
-            this.logger.info(`${this.walletAddress} | Success refuel to ${this.randomNetwork.name}: https://basescan.org/tx/${txHash}`)
-        } catch (e) {
-            this.logger.info(`${this.walletAddress} | Error: ${e}`)
+                const txHash = await this.baseWallet.writeContract({
+                    address: this.merklyContract,
+                    abi: merklyAbi,
+                    functionName: 'bridgeGas',
+                    args: [
+                        this.destNetwork,
+                        this.walletAddress,
+                        adapterParams
+                    ],
+                    value: value
+                })
+                isSuccess = true
+                this.logger.info(`${this.walletAddress} | Success refuel to ${this.randomNetwork.name}: https://basescan.org/tx/${txHash}`)
+            } catch (e) {
+                this.logger.info(`${this.walletAddress} | Error: ${e}`)
+
+                if (retryCount <= 3) {
+                    if (retryCount == 1) {
+                        if ((e.shortMessage.includes('insufficient funds') || e.shortMessage.includes('exceeds the balance')) && binanceConfig.useRefill) {
+                            await refill(this.privateKey)
+                        }
+                    }
+                    
+                    this.logger.info(`${this.walletAddress} | Wait 30 sec and retry bridge ${retryCount}/3`)
+                    retryCount++
+                    await sleep(30 * 1000)
+                } else {
+                    isSuccess = true
+                    this.logger.info(`${this.walletAddress} | Bridge unsuccessful, skip`)
+                }
+            }
         }
     }
 }

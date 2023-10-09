@@ -5,7 +5,7 @@ export const generalConfig = {
 }
 
 export const bridgeConfig = {
-    type: 'stargate', // 'stargate', 'official'
+    type: 'official', // 'stargate', 'official'
     stargateFrom: 'arbitrum', // 'arbitrum', 'optimism', 'random'
     bridgeFrom: 0.001,
     bridgeTo: 0.002,
@@ -14,9 +14,12 @@ export const bridgeConfig = {
     maxGas: 10 // for official bridge Eth -> Base
 }
 
-export const binance = {
+export const binanceConfig = {
     key: '',
-    secret: ''
+    secret: '',
+    withdrawFrom: 0.001, // min: 0.001
+    withdrawTo: 0.0013,
+    useRefill: false
 }
 
 export const mintfunConfig = {
@@ -36,6 +39,6 @@ export const aaveConfig = {
 }
 
 export const odosConfig = {
-    useProxy: false,
+    useProxy: true,
     useReferral: true
 }
