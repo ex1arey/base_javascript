@@ -1,7 +1,10 @@
 export const generalConfig = {
     sleepFrom: 60,
     sleepTo: 150,
-    shuffleWallets: true
+    shuffleWallets: true,
+    shuffleCustomModules: false,
+    customModules: ['l2telegraph', 'mintfun', 'uniswap']
+    // 'aave', 'baseswap', 'l2telegraph', 'l2telegraph_message', 'merkly', 'mintfun', 'odos', 'pancake', 'uniswap', 'woofi'
 }
 
 export const bridgeConfig = {

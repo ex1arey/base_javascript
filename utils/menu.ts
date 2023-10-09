@@ -8,6 +8,10 @@ export const entryPoint = async () => {
             message: "Действие:",
             choices: [
                 {
+                    name: "Custom module",
+                    value: "custom",
+                },
+                {
                     name: "Random module",
                     value: "random",
                 },

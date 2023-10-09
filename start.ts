@@ -332,6 +332,65 @@ async function stableSwapModule() {
     }
 }
 
+async function customModule() {
+    const logger = makeLogger("Custom")
+    let customModules = generalConfig.customModules
+    if (generalConfig.shuffleCustomModules) {
+        shuffle(customModules)
+    }
+    for (let privateKey of privateKeys) {
+        let sleepTime
+        for (let customModuleItem of customModules) {
+            switch (customModuleItem) {
+                case 'mintfun':
+                    const mintfun = new Mintfun(privateKeyConvert(privateKey))
+                    await mintfun.mintRandom()
+                    break
+                case 'l2telegraph':
+                    const l2telegraph = new L2Telegraph(privateKeyConvert(privateKey))
+                    await l2telegraph.mintAndBridge()
+                    break
+                case 'l2telegraph_message':
+                    const l2telegraphMessage = new L2Telegraph(privateKeyConvert(privateKey))
+                    await l2telegraphMessage.sendMessage()
+                    break
+                case 'merkly':
+                    const merkly = new Merkly(privateKeyConvert(privateKey))
+                    await merkly.refuel()
+                    break
+                case 'baseswap':
+                    const baseswap = new Baseswap(privateKeyConvert(privateKey))
+                    await baseswap.roundSwap()
+                    break
+                case 'pancake':
+                    const pancake = new Pancake(privateKeyConvert(privateKey))
+                    await pancake.roundSwap()
+                    break
+                case 'uniswap':
+                    const uniswap = new Uniswap(privateKeyConvert(privateKey))
+                    await uniswap.roundSwap()
+                    break
+                case 'woofi':
+                    const woofi = new Woofi(privateKeyConvert(privateKey))
+                    await woofi.roundSwap()
+                    break
+                case 'odos':
+                    const odos = new Odos(privateKeyConvert(privateKey))
+                    await odos.roundSwap()
+                    break
+                case 'aave':
+                    const aave = new Aave(privateKeyConvert(privateKey))
+                    await aave.run()
+                    break
+            }
+        }
+
+        sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function startMenu() {
     let mode = await entryPoint()
     switch (mode) {
@@ -382,6 +441,9 @@ async function startMenu() {
             break
         case "stable_to_eth":
             await stableSwapModule()
+            break
+        case "custom":
+            await customModule()
             break
     }
 }
