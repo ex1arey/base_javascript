@@ -52,7 +52,7 @@ export class Mintfun {
                     functionName: 'mint',
                     args: [BigInt(1)]
                 })
-                
+                isSuccess = true
                 this.logger.info(`${baseWallet.account.address} | Success mint: https://basescan.org/tx/${txHash}`)
                 await submitTx(baseWallet.account.address, txHash)
             } catch (e) {
