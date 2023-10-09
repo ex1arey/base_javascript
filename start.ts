@@ -335,11 +335,12 @@ async function stableSwapModule() {
 async function customModule() {
     const logger = makeLogger("Custom")
     let customModules = generalConfig.customModules
-    if (generalConfig.shuffleCustomModules) {
-        shuffle(customModules)
-    }
+
     for (let privateKey of privateKeys) {
         let sleepTime
+        if (generalConfig.shuffleCustomModules) {
+            shuffle(customModules)
+        }
         for (let customModuleItem of customModules) {
             switch (customModuleItem) {
                 case 'mintfun':
