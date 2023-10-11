@@ -3,7 +3,7 @@ import {Hex, encodePacked, parseEther} from "viem"
 import { makeLogger } from "../utils/logger"
 import { merklyAbi } from "../data/abi/merkly"
 import { random, sleep } from "../utils/common"
-import { binanceConfig } from "../config"
+import { binanceConfig, merklyConfig } from "../config"
 import { refill } from "../utils/refill"
 
 export class Merkly {
@@ -48,7 +48,13 @@ export class Merkly {
         this.baseClient = getPublicBaseClient()
         this.baseWallet = getBaseWalletClient(privateKey)
         this.walletAddress = this.baseWallet.account.address
-        this.randomNetwork = this.networks[random(0, this.networks.length-1)]
+
+        if (merklyConfig.destinationNetwork === 'random') {
+            this.randomNetwork = this.networks[random(0, this.networks.length-1)]
+        } else {
+            this.randomNetwork = this.networks.find(network => network.name === merklyConfig.destinationNetwork)
+        }
+        
         this.destNetwork = this.randomNetwork.id
     }
 
@@ -69,9 +75,10 @@ export class Merkly {
         return BigInt(Math.round(Number(value) * 1.2))
     }
 
-    async refuel() {
+    async refuel(value: string) {
         this.logger.info(`${this.walletAddress} | Refuel to ${this.randomNetwork.name}`)
-        let amount = BigInt(parseEther('0.00001'))
+
+        let amount = BigInt(parseEther(value))
 
         let isSuccess = false
         let retryCount = 1

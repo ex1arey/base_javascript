@@ -1,6 +1,6 @@
 import { privateKeyConvert, readWallets } from "./utils/wallet"
 import { random, randomFloat, shuffle, sleep } from "./utils/common"
-import { binanceConfig, bridgeConfig, generalConfig, mintfunConfig, odosConfig } from "./config"
+import { binanceConfig, bridgeConfig, generalConfig, merklyConfig, mintfunConfig, odosConfig } from "./config"
 import { makeLogger } from "./utils/logger"
 import { entryPoint } from "./utils/menu"
 import { Bridge } from "./modules/bridge"
@@ -108,8 +108,9 @@ async function l2telegraphMessageModule() {
 async function merklyRefuelModule() {
     const logger = makeLogger("Merkly")
     for (let privateKey of privateKeys) {
+        const sum = randomFloat(merklyConfig.refuelFrom, merklyConfig.refuelTo)
         const merkly = new Merkly(privateKeyConvert(privateKey))
-        await merkly.refuel()
+        await merkly.refuel(sum.toString())
         
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
@@ -222,8 +223,9 @@ async function randomModule() {
                 await l2telegraphMessage.sendMessage()
                 break
             case 4:
+                const sum = randomFloat(merklyConfig.refuelFrom, merklyConfig.refuelTo)
                 const merkly = new Merkly(privateKeyConvert(privateKey))
-                await merkly.refuel()
+                await merkly.refuel(sum.toString())
                 break
             case 5:
                 const baseswap = new Baseswap(privateKeyConvert(privateKey))
@@ -308,8 +310,9 @@ async function randomL0Module() {
                 await l2telegraphMessage.sendMessage()
                 break
             case 3:
+                const sum = randomFloat(merklyConfig.refuelFrom, merklyConfig.refuelTo)
                 const merkly = new Merkly(privateKeyConvert(privateKey))
-                await merkly.refuel()
+                await merkly.refuel(sum.toString())
                 break
         }
 
@@ -356,8 +359,9 @@ async function customModule() {
                     await l2telegraphMessage.sendMessage()
                     break
                 case 'merkly':
+                    const sum = randomFloat(merklyConfig.refuelFrom, merklyConfig.refuelTo)
                     const merkly = new Merkly(privateKeyConvert(privateKey))
-                    await merkly.refuel()
+                    await merkly.refuel(sum.toString())
                     break
                 case 'baseswap':
                     const baseswap = new Baseswap(privateKeyConvert(privateKey))

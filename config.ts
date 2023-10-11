@@ -45,3 +45,9 @@ export const odosConfig = {
     useProxy: true,
     useReferral: true
 }
+
+export const merklyConfig = {
+    refuelFrom: 0.00001,
+    refuelTo: 0.00002,
+    destinationNetwork: 'random' // 'Zora' 'Arbitrum Nova' 'Moonbeam' 'Gnosis' 'OpBNB' 'Astar'
+}
