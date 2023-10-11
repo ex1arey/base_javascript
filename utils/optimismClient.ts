@@ -8,8 +8,8 @@ import {
     PrivateKeyAccount, PublicClient,
     WalletClient
 } from "viem"
-import {privateKeyToAccount} from "viem/accounts"
-import { walletL1OpStackActions, publicL1OpStackActions, publicL2OpStackActions } from 'op-viem'
+import { privateKeyToAccount } from "viem/accounts"
+import { publicL2OpStackActions } from 'op-viem'
 
 export const optimism = defineChain({
     id: 10,

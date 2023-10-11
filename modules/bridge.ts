@@ -1,6 +1,6 @@
-import {formatEther, Hex, parseEther, toHex} from "viem"
-import {getArbWalletClient, getPublicArbClient} from "../utils/arbClient"
-import { getEthWalletClient, getPublicEthClient } from "../utils/ethClient"
+import { formatEther, Hex, parseEther } from "viem"
+import { getArbWalletClient, getPublicArbClient } from "../utils/arbClient"
+import { getEthWalletClient } from "../utils/ethClient"
 import { layerzeroAbi } from '../data/abi/layerzero'
 import { stargateAbi } from '../data/abi/stargate'
 import { bridgeAbi } from "../data/abi/bridge"

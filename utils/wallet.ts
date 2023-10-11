@@ -1,4 +1,4 @@
-import {Hex, toHex} from "viem"
+import { Hex } from "viem"
 import fs from "fs"
 
 export function privateKeyConvert(privateKey: string): Hex {
@@ -11,11 +11,11 @@ export function privateKeyConvert(privateKey: string): Hex {
 
 export function readWallets(filePath: string) {
     try {
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line !== '');
-        return lines;
+        const fileContent = fs.readFileSync(filePath, 'utf-8')
+        const lines = fileContent.split('\n').map(line => line.trim()).filter(line => line !== '')
+        return lines
     } catch (error) {
-        console.error('Error reading the file:', error.message);
-        return [];
+        console.error('Error reading the file:', error.message)
+        return []
     }
 }

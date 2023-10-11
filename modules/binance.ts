@@ -4,7 +4,6 @@ import crypto from 'crypto'
 import { Hex } from 'viem'
 import { makeLogger } from '../utils/logger'
 import { getBaseWalletClient } from '../utils/baseClient'
-import { response } from 'express'
 
 export class Binance {
     binanceEndpoint:string = 'https://api.binance.com/sapi/v1/capital/withdraw/apply'

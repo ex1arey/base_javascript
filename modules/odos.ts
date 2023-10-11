@@ -1,15 +1,15 @@
-import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, PrivateKeyAccount, formatEther} from "viem"
+import { getPublicBaseClient, getBaseWalletClient } from "../utils/baseClient"
+import { Hex, PrivateKeyAccount, formatEther } from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, sleep } from "../utils/common"
 import { binanceConfig, generalConfig, odosConfig, swapConfig } from "../config"
 import { approve } from "../utils/approve"
-import axios from "axios"
 import { tokens } from "../data/base-tokens"
 import { getTokenBalance } from "../utils/tokenBalance"
 import { privateKeyToAccount } from "viem/accounts"
 import { HttpsProxyAgent } from "https-proxy-agent"
 import { refill } from "../utils/refill"
+import axios from "axios"
 
 export class Odos {
     privateKey: Hex

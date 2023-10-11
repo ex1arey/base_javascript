@@ -1,5 +1,5 @@
-import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, encodeFunctionData, encodePacked, formatEther, parseEther, parseGwei} from "viem"
+import { getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
+import { Hex, encodeFunctionData, formatEther, parseGwei } from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, randomFloat, sleep } from "../utils/common"
 import { tokens } from "../data/base-tokens"
