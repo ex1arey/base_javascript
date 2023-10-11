@@ -51,3 +51,7 @@ export const merklyConfig = {
     refuelTo: 0.00002,
     destinationNetwork: 'random' // 'Zora' 'Arbitrum Nova' 'Moonbeam' 'Gnosis' 'OpBNB' 'Astar'
 }
+
+export const l2telegraphMessageConfig = {
+    maxMessageCost: 0.00030
+}

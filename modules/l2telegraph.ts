@@ -1,18 +1,18 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {formatEther, Hex, parseEther, PublicClient, toHex, WalletClient} from "viem"
+import {formatEther, Hex, parseEther, parseGwei, PublicClient, toHex, WalletClient} from "viem"
 import {getEthWalletClient, getPublicEthClient} from "../utils/ethClient"
 import { makeLogger } from "../utils/logger"
 import { mintfunContracts } from "../data/mintfun-contracts"
 import { l2telegraphAbi } from "../data/abi/l2telegraph_nft"
 import { l2telegraphMsgAbi } from "../data/abi/l2telegraph_message"
-import { binanceConfig } from "../config"
+import { binanceConfig, l2telegraphMessageConfig } from "../config"
 import { refill } from "../utils/refill"
-import { sleep } from "../utils/common"
+import { randomFloat, sleep } from "../utils/common"
 
 export class L2Telegraph {
     privateKey: Hex
     logger: any
-    destNetwork: number = 175
+    destNetwork: number = 195
     nftContract: Hex = '0x36a358b3ba1fb368e35b71ea40c7f4ab89bfd8e1'
     messageContract: Hex = '0x64e0f6164ac110b67df9a4848707ffbcb86c87a9'
     baseClient
@@ -78,7 +78,8 @@ export class L2Telegraph {
                 txHash = await this.baseWallet.writeContract({
                     address: this.nftContract,
                     abi: l2telegraphAbi,
-                    functionName: 'mint'
+                    functionName: 'mint',
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
                 isSuccess = true
                 this.logger.info(`${this.walletAddress} | Success mint: https://basescan.org/tx/${txHash}`)
@@ -130,7 +131,8 @@ export class L2Telegraph {
                             '0x5b10ae182c297ec76fe6fe0e3da7c4797cede02d36a358b3ba1fb368e35b71ea40c7f4ab89bfd8e1',
                             tokenId
                         ],
-                        value: value
+                        value: value,
+                        gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                     })
                     isSuccess = true
                     this.logger.info(`${this.walletAddress} | Success bridge: https://basescan.org/tx/${txHash}`)
@@ -165,21 +167,27 @@ export class L2Telegraph {
         while (!isSuccess) {
             try {
                 let value = await this.estimateLayerzeroFee('bridge')
-                value = value + BigInt(parseEther('0.00025'))
+                value = value + BigInt(parseEther('0.00022'))
 
-                const txHash = await this.baseWallet.writeContract({
-                    address: this.messageContract,
-                    abi: l2telegraphMsgAbi,
-                    functionName: 'sendMessage',
-                    args: [
-                        'Hello!',
-                        this.destNetwork,
-                        '0x5f26ea1e4d47071a4d9a2c2611c2ae0665d64b6d64e0f6164ac110b67df9a4848707ffbcb86c87a9'
-                    ],
-                    value: value
-                })
-                isSuccess = true
-                this.logger.info(`${this.walletAddress} | Success sent message: https://basescan.org/tx/${txHash}`)
+                if (value > BigInt(parseEther(l2telegraphMessageConfig.maxMessageCost.toString()))) {
+                    this.logger.info(`${this.walletAddress} | Message price too expensive, skip`)
+                    isSuccess = true
+                } else {
+                    const txHash = await this.baseWallet.writeContract({
+                        address: this.messageContract,
+                        abi: l2telegraphMsgAbi,
+                        functionName: 'sendMessage',
+                        args: [
+                            'Hello!',
+                            this.destNetwork,
+                            '0x5f26ea1e4d47071a4d9a2c2611c2ae0665d64b6d64e0f6164ac110b67df9a4848707ffbcb86c87a9'
+                        ],
+                        value: value,
+                        gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
+                    })
+                    isSuccess = true
+                    this.logger.info(`${this.walletAddress} | Success sent message: https://basescan.org/tx/${txHash}`)
+                }
             } catch (e) {
                 this.logger.info(`${this.walletAddress} | Error: ${e.shortMessage}`)
 

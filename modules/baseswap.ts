@@ -1,7 +1,7 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, encodePacked, formatEther, parseEther} from "viem"
+import {Hex, encodePacked, formatEther, parseEther, parseGwei} from "viem"
 import { makeLogger } from "../utils/logger"
-import { random, sleep } from "../utils/common"
+import { random, randomFloat, sleep } from "../utils/common"
 import { tokens } from "../data/base-tokens"
 import { baseswapRouterAbi } from "../data/abi/baseswap_router"
 import { approve } from "../utils/approve"
@@ -66,7 +66,8 @@ export class Baseswap {
                         this.walletAddress,
                         deadline
                     ],
-                    value: amount
+                    value: amount,
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
                 successSwap = true
                 this.logger.info(`${this.walletAddress} | Success swap ${formatEther(amount)} ETH -> ${toToken}: https://basescan.org/tx/${txHash}`)
@@ -121,7 +122,8 @@ export class Baseswap {
                         ],
                         this.walletAddress,
                         deadline
-                    ]
+                    ],
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
 
                 successSwap = true

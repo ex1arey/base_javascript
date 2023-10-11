@@ -1,8 +1,8 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, encodePacked, parseEther} from "viem"
+import {Hex, encodePacked, parseEther, parseGwei} from "viem"
 import { makeLogger } from "../utils/logger"
 import { merklyAbi } from "../data/abi/merkly"
-import { random, sleep } from "../utils/common"
+import { random, randomFloat, sleep } from "../utils/common"
 import { binanceConfig, merklyConfig } from "../config"
 import { refill } from "../utils/refill"
 
@@ -54,7 +54,7 @@ export class Merkly {
         } else {
             this.randomNetwork = this.networks.find(network => network.name === merklyConfig.destinationNetwork)
         }
-        
+
         this.destNetwork = this.randomNetwork.id
     }
 
@@ -111,7 +111,8 @@ export class Merkly {
                         this.walletAddress,
                         adapterParams
                     ],
-                    value: value
+                    value: value,
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
                 isSuccess = true
                 this.logger.info(`${this.walletAddress} | Success refuel to ${this.randomNetwork.name}: https://basescan.org/tx/${txHash}`)

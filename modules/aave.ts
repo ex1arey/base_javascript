@@ -1,7 +1,7 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, formatEther} from "viem"
+import {Hex, formatEther, parseGwei} from "viem"
 import { makeLogger } from "../utils/logger"
-import { random, sleep } from "../utils/common"
+import { random, randomFloat, sleep } from "../utils/common"
 import { aaveConfig, binanceConfig, generalConfig, swapConfig } from "../config"
 import { erc20Abi } from "../data/abi/erc20"
 import { aaveAbi } from "../data/abi/aave"
@@ -56,7 +56,8 @@ export class Aave {
                         this.walletAddress,
                         0
                     ],
-                    value: amount
+                    value: amount,
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
 
                 successDeposit = true
@@ -104,7 +105,8 @@ export class Aave {
                         amount,
                         this.walletAddress,
                     ],
-                    value: 0
+                    value: 0,
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
 
                 successWithdraw = true

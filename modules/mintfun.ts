@@ -1,5 +1,5 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {formatEther, Hex, parseEther, PublicClient, toHex, WalletClient} from "viem"
+import {formatEther, Hex, parseEther, parseGwei, PublicClient, toHex, WalletClient} from "viem"
 import {getEthWalletClient, getPublicEthClient} from "../utils/ethClient"
 import {mintfunAbi} from '../data/abi/mintfun'
 import { makeLogger } from "../utils/logger"
@@ -8,7 +8,7 @@ import { mintfunContracts } from "../data/mintfun-contracts"
 import { base } from "viem/chains"
 import { binanceConfig } from "../config"
 import { refill } from "../utils/refill"
-import { sleep } from "../utils/common"
+import { randomFloat, sleep } from "../utils/common"
 
 export class Mintfun {
     privateKey: Hex
@@ -25,7 +25,6 @@ export class Mintfun {
         const baseWallet = getBaseWalletClient(this.privateKey)
 
         const contract: Hex = getRandomContract(mintfunContracts)
-        const amount: bigint = BigInt(1)
         let nftName = ''
 
         try {
@@ -50,7 +49,8 @@ export class Mintfun {
                     address: contract,
                     abi: mintfunAbi,
                     functionName: 'mint',
-                    args: [BigInt(1)]
+                    args: [BigInt(1)],
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
                 isSuccess = true
                 this.logger.info(`${baseWallet.account.address} | Success mint: https://basescan.org/tx/${txHash}`)

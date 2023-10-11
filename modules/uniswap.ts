@@ -1,7 +1,7 @@
 import {getPublicBaseClient, getBaseWalletClient} from "../utils/baseClient"
-import {Hex, encodeFunctionData, encodePacked, formatEther, parseEther} from "viem"
+import {Hex, encodeFunctionData, encodePacked, formatEther, parseEther, parseGwei} from "viem"
 import { makeLogger } from "../utils/logger"
-import { random, sleep } from "../utils/common"
+import { random, randomFloat, sleep } from "../utils/common"
 import { tokens } from "../data/base-tokens"
 import { approve } from "../utils/approve"
 import { getTokenBalance } from "../utils/tokenBalance"
@@ -78,7 +78,8 @@ export class Uniswap {
                         deadline,
                         [txData]
                     ],
-                    value: amount
+                    value: amount,
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
 
                 successSwap = true
@@ -151,7 +152,8 @@ export class Uniswap {
                     args: [
                         deadline,
                         [txData, unwrapData]
-                    ]
+                    ],
+                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
                 })
 
                 successSwap = true
