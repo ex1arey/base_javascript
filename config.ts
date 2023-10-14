@@ -55,3 +55,14 @@ export const merklyConfig = {
 export const l2telegraphMessageConfig = {
     maxMessageCost: 0.00030
 }
+
+export const zeriusConfig = {
+    destinationNetworks: [195, 111]
+    // "zora": 195,
+    // "optimism": 111,
+    // "polygon": 109,
+    // "bsc": 102,
+    // "avalanche": 106,
+    // "arbitrum": 110,
+    // "ethereum": 101,
+}

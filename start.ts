@@ -15,6 +15,7 @@ import { Aave } from "./modules/aave"
 import { Odos } from "./modules/odos"
 import { waitGas } from "./utils/getCurrentGas"
 import { Binance } from "./modules/binance"
+import { Zerius } from "./modules/zerius"
 
 let privateKeys = readWallets('./private_keys.txt')
 
@@ -196,6 +197,18 @@ async function binanceModule() {
         const sum = randomFloat(binanceConfig.withdrawFrom, binanceConfig.withdrawTo)
         const binance = new Binance(privateKeyConvert(privateKey))
         await binance.withdraw(sum.toString())
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function zeriusModule() {
+    const logger = makeLogger("Zerius")
+    for (let privateKey of privateKeys) {
+        const zerius = new Zerius(privateKeyConvert(privateKey))
+        await zerius.mintAndBridge()
         
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
@@ -434,6 +447,9 @@ async function startMenu() {
             break
         case "l2telegraph_message":
             await l2telegraphMessageModule()
+            break
+        case "zerius":
+            await zeriusModule()
             break
         case "random":
             await randomModule()

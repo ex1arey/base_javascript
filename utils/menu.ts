@@ -72,6 +72,10 @@ export const entryPoint = async () => {
                     value: "l2telegraph_message",
                 },
                 {
+                    name: "Zerius",
+                    value: "zerius",
+                },
+                {
                     name: "Swap all stables to ETH",
                     value: "stable_to_eth",
                 },
