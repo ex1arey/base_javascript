@@ -64,5 +64,4 @@ export const zeriusConfig = {
     // "bsc": 102,
     // "avalanche": 106,
     // "arbitrum": 110,
-    // "ethereum": 101,
 }
