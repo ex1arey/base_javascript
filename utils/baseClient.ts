@@ -10,6 +10,7 @@ import {
     WalletClient
 } from "viem"
 import {privateKeyToAccount} from "viem/accounts"
+import { generalConfig } from "../config"
 
 export const base = defineChain({
     id: 8453,
@@ -22,12 +23,10 @@ export const base = defineChain({
     },
     rpcUrls: {
         default: {
-            http: ['https://mainnet.base.org'],
-            webSocket: ['wss://mainnet.base.org'],
+            http: [generalConfig.baserpc]
         },
         public: {
-            http: ['https://mainnet.base.org'],
-            webSocket: ['wss://mainnet.base.org'],
+            http: [generalConfig.baserpc]
         },
     },
     blockExplorers: {

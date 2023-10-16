@@ -1,4 +1,6 @@
 export const generalConfig = {
+    ethrpc: 'https://rpc.ankr.com/eth',
+    baserpc: 'https://rpc.ankr.com/base',
     sleepFrom: 60,
     sleepTo: 150,
     shuffleWallets: true,
