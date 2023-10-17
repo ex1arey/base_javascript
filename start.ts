@@ -401,6 +401,10 @@ async function customModule() {
                     await aave.run()
                     break
             }
+
+            sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+            logger.info(`Waiting ${sleepTime} sec until next module...`)
+            await sleep(sleepTime * 1000)
         }
 
         sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)

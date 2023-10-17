@@ -3,9 +3,9 @@ import { Hex, parseEther, parseGwei } from "viem"
 import { makeLogger } from "../utils/logger"
 import { l2telegraphAbi } from "../data/abi/l2telegraph_nft"
 import { l2telegraphMsgAbi } from "../data/abi/l2telegraph_message"
-import { binanceConfig, l2telegraphMessageConfig } from "../config"
+import { binanceConfig, generalConfig, l2telegraphMessageConfig } from "../config"
 import { refill } from "../utils/refill"
-import { randomFloat, sleep } from "../utils/common"
+import { random, randomFloat, sleep } from "../utils/common"
 
 export class L2Telegraph {
     privateKey: Hex
@@ -104,6 +104,10 @@ export class L2Telegraph {
 
     async mintAndBridge() {
         let txHash = await this.mint()
+
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        this.logger.info(`Waiting ${sleepTime} sec after mint and before bridge...`)
+        await sleep(sleepTime * 1000)
 
         if (txHash !== undefined) {
             this.logger.info(`${this.walletAddress} | Bridge`)
