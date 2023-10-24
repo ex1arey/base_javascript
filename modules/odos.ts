@@ -10,6 +10,7 @@ import { privateKeyToAccount } from "viem/accounts"
 import { HttpsProxyAgent } from "https-proxy-agent"
 import { refill } from "../utils/refill"
 import axios from "axios"
+import { waitGas } from "../utils/getCurrentGas"
 
 export class Odos {
     privateKey: Hex
@@ -89,6 +90,8 @@ export class Odos {
     }
 
     async swapEthToToken(toToken: string = 'USDC', amount: bigint) {
+        await waitGas()
+        
         this.logger.info(`${this.walletAddress} | Swap ${formatEther(amount)} ETH -> ${toToken}`)
         let successSwap: boolean = false
         let retryCount = 1
@@ -124,6 +127,8 @@ export class Odos {
     }
 
     async swapTokenToEth(fromToken: string = 'USDC') {
+        await waitGas()
+        
         let amount = await getTokenBalance(this.baseClient, tokens[fromToken], this.walletAddress)
         let successSwap: boolean = false
         let retryCount = 1

@@ -5,6 +5,7 @@ import { zeriusAbi } from "../data/abi/zerius"
 import { binanceConfig, zeriusConfig } from "../config"
 import { refill } from "../utils/refill"
 import { random, randomFloat, sleep } from "../utils/common"
+import { waitGas } from "../utils/getCurrentGas"
 
 export class Zerius {
     privateKey: Hex
@@ -46,6 +47,8 @@ export class Zerius {
     }
 
     async mint() {
+        await waitGas()
+        
         let txHash: Hex | undefined
 
         this.logger.info(`${this.walletAddress} | Mint`)
@@ -92,6 +95,8 @@ export class Zerius {
     }
 
     async mintAndBridge() {
+        await waitGas()
+        
         let txHash = await this.mint()
 
         if (txHash !== undefined) {

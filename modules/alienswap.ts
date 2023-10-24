@@ -10,10 +10,10 @@ import { binanceConfig, generalConfig, swapConfig } from "../config"
 import { refill } from "../utils/refill"
 import { waitGas } from "../utils/getCurrentGas"
 
-export class Baseswap {
+export class Alienswap {
     privateKey: Hex
     logger: any
-    baseswapContract: Hex = '0x327Df1E6de05895d2ab08513aaDD9313Fe505d86'
+    alientwapContract: Hex = '0x8c1a3cf8f83074169fe5d7ad50b978e1cd6b37c7'
     randomNetwork: any
     baseClient: any
     baseWallet: any
@@ -21,7 +21,7 @@ export class Baseswap {
 
     constructor(privateKey:Hex) {
         this.privateKey = privateKey
-        this.logger = makeLogger("Baseswap")
+        this.logger = makeLogger("Alienswap")
         this.baseClient = getPublicBaseClient()
         this.baseWallet = getBaseWalletClient(privateKey)
         this.walletAddress = this.baseWallet.account.address
@@ -29,7 +29,7 @@ export class Baseswap {
 
     async getMinAmountOut(fromToken: Hex, toToken: Hex, amount: BigInt, slippage: number) {
         const minAmountOut = await this.baseClient.readContract({
-            address: this.baseswapContract,
+            address: this.alientwapContract,
             abi: baseswapRouterAbi,
             functionName: 'getAmountsOut',
             args: [
@@ -56,7 +56,7 @@ export class Baseswap {
                 const deadline: number = Math.floor(Date.now() / 1000) + 1000000
 
                 const txHash = await this.baseWallet.writeContract({
-                    address: this.baseswapContract,
+                    address: this.alientwapContract,
                     abi: baseswapRouterAbi,
                     functionName: 'swapExactETHForTokens',
                     args: [
@@ -106,14 +106,14 @@ export class Baseswap {
                 const minAmountOut = await this.getMinAmountOut(tokens[fromToken], tokens['ETH'], amount, 1)
                 const deadline: number = Math.floor(Date.now() / 1000) + 1000000
 
-                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.baseswapContract, amount, this.logger)
+                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.alientwapContract, amount, this.logger)
 
                 const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
                 this.logger.info(`${this.walletAddress} | Waiting ${sleepTime} sec after approve before swap...`)
                 await sleep(sleepTime * 1000)
 
                 const txHash = await this.baseWallet.writeContract({
-                    address: this.baseswapContract,
+                    address: this.alientwapContract,
                     abi: baseswapRouterAbi,
                     functionName: 'swapExactTokensForETH',
                     args: [

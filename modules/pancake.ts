@@ -9,6 +9,7 @@ import { binanceConfig, generalConfig, swapConfig } from "../config"
 import { pancakeQuouterAbi } from "../data/abi/pancake_quoter"
 import { pancakeRouterAbi } from "../data/abi/pancake_router"
 import { refill } from "../utils/refill"
+import { waitGas } from "../utils/getCurrentGas"
 
 export class Pancake {
     privateKey: Hex
@@ -47,6 +48,8 @@ export class Pancake {
     }
 
     async swapEthToToken(toToken: string = 'USDC', amount: bigint) {
+        await waitGas()
+        
         this.logger.info(`${this.walletAddress} | Swap ${formatEther(amount)} ETH -> ${toToken}`)
         let successSwap: boolean = false
         let retryCount = 1
@@ -105,6 +108,8 @@ export class Pancake {
     }
 
     async swapTokenToEth(fromToken: string = 'USDC') {
+        await waitGas()
+        
         let amount = await getTokenBalance(this.baseClient, tokens[fromToken], this.walletAddress)
         let successSwap: boolean = false
         let retryCount = 1

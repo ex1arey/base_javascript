@@ -1,6 +1,6 @@
 import { formatGwei } from "viem"
 import { getPublicEthClient } from "./ethClient"
-import { bridgeConfig } from "../config"
+import { bridgeConfig, generalConfig } from "../config"
 import { makeLogger } from "./logger"
 import { sleep } from "./common"
 
@@ -11,14 +11,19 @@ export async function getCurrentGas() {
     return parseFloat(formatGwei(gas))
 }
 
-export async function waitGas() {
+export async function waitGas(type: string = 'regular') {
+    let maxGas = generalConfig.maxGas
+    if (type === 'bridge') {
+        maxGas = bridgeConfig.maxGas
+    }
+    
     const logger = makeLogger("Gas checker")
     let isGoodGas = false
     while (!isGoodGas) {
         try {
             const currentGas = await getCurrentGas()
-            if (currentGas > bridgeConfig.maxGas) {
-                logger.info(`Wait for gas ${bridgeConfig.maxGas}. Current gas: ${currentGas.toFixed(1)}`)
+            if (currentGas > maxGas) {
+                logger.info(`Wait for gas ${maxGas}. Current gas: ${currentGas.toFixed(1)}`)
                 await sleep(10 * 1000)
             } else {
                 return true

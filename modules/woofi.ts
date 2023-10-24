@@ -8,6 +8,7 @@ import { getTokenBalance } from "../utils/tokenBalance"
 import { binanceConfig, generalConfig, swapConfig } from "../config"
 import { woofiRouterAbi } from "../data/abi/woofi_router"
 import { refill } from "../utils/refill"
+import { waitGas } from "../utils/getCurrentGas"
 
 export class Woofi {
     privateKey: Hex
@@ -42,6 +43,8 @@ export class Woofi {
     }
 
     async swapEthToToken(toToken: string = 'USDC', amount: bigint) {
+        await waitGas()
+        
         this.logger.info(`${this.walletAddress} | Swap ${formatEther(amount)} ETH -> ${toToken}`)
         let successSwap: boolean = false
         let retryCount = 1
@@ -89,6 +92,8 @@ export class Woofi {
     }
 
     async swapTokenToEth(fromToken: string = 'USDC') {
+        await waitGas()
+        
         let amount = await getTokenBalance(this.baseClient, tokens[fromToken], this.walletAddress)
         let successSwap: boolean = false
         let retryCount = 1

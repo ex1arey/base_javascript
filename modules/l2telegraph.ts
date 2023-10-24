@@ -6,6 +6,7 @@ import { l2telegraphMsgAbi } from "../data/abi/l2telegraph_message"
 import { binanceConfig, generalConfig, l2telegraphMessageConfig } from "../config"
 import { refill } from "../utils/refill"
 import { random, randomFloat, sleep } from "../utils/common"
+import { waitGas } from "../utils/getCurrentGas"
 
 export class L2Telegraph {
     privateKey: Hex
@@ -64,6 +65,7 @@ export class L2Telegraph {
     }
 
     async mint() {
+        await waitGas()
         let txHash: Hex | undefined
 
         this.logger.info(`${this.walletAddress} | Mint`)
@@ -103,6 +105,7 @@ export class L2Telegraph {
     }
 
     async mintAndBridge() {
+        await waitGas()
         let txHash = await this.mint()
 
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
@@ -161,6 +164,7 @@ export class L2Telegraph {
     }
 
     async sendMessage() {
+        await waitGas()
         this.logger.info(`${this.walletAddress} | Send message`)
 
         let isSuccess = false

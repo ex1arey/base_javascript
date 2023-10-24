@@ -36,6 +36,14 @@ export const entryPoint = async () => {
                     value: "merkly",
                 },
                 {
+                    name: "Bungee",
+                    value: "bungee",
+                },
+                {
+                    name: "Alienswap",
+                    value: "alienswap",
+                },
+                {
                     name: "Baseswap",
                     value: "baseswap",
                 },
@@ -54,6 +62,10 @@ export const entryPoint = async () => {
                 {
                     name: "Odos",
                     value: "odos",
+                },
+                {
+                    name: "Openocean",
+                    value: "openocean",
                 },
                 {
                     name: "Aave",

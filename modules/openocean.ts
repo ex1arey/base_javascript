@@ -1,76 +1,79 @@
 import { getPublicBaseClient, getBaseWalletClient } from "../utils/baseClient"
-import { Hex, formatEther, parseGwei } from "viem"
+import { Hex, PrivateKeyAccount, formatEther, parseGwei } from "viem"
 import { makeLogger } from "../utils/logger"
 import { random, randomFloat, sleep } from "../utils/common"
-import { tokens } from "../data/base-tokens"
-import { baseswapRouterAbi } from "../data/abi/baseswap_router"
+import { binanceConfig, generalConfig, odosConfig, openoceanConfig, swapConfig } from "../config"
 import { approve } from "../utils/approve"
+import { tokens } from "../data/base-tokens"
 import { getTokenBalance } from "../utils/tokenBalance"
-import { binanceConfig, generalConfig, swapConfig } from "../config"
+import { privateKeyToAccount } from "viem/accounts"
 import { refill } from "../utils/refill"
+import axios from "axios"
 import { waitGas } from "../utils/getCurrentGas"
 
-export class Baseswap {
+export class Openocean {
     privateKey: Hex
     logger: any
-    baseswapContract: Hex = '0x327Df1E6de05895d2ab08513aaDD9313Fe505d86'
+    openoceanContract: Hex = '0x6352a56caadc4f1e25cd6c75970fa768a3304e64'
     randomNetwork: any
     baseClient: any
     baseWallet: any
     walletAddress: Hex
+    account: PrivateKeyAccount
 
     constructor(privateKey:Hex) {
         this.privateKey = privateKey
-        this.logger = makeLogger("Baseswap")
+        this.logger = makeLogger("Openocean")
         this.baseClient = getPublicBaseClient()
         this.baseWallet = getBaseWalletClient(privateKey)
+        this.account = privateKeyToAccount(privateKey)
         this.walletAddress = this.baseWallet.account.address
     }
 
-    async getMinAmountOut(fromToken: Hex, toToken: Hex, amount: BigInt, slippage: number) {
-        const minAmountOut = await this.baseClient.readContract({
-            address: this.baseswapContract,
-            abi: baseswapRouterAbi,
-            functionName: 'getAmountsOut',
-            args: [
-                amount,
-                [
-                    fromToken,
-                    toToken
-                ]
-            ]
+    async getTransactionData(fromToken: Hex, toToken: Hex, amount: bigint, slippage: number) {
+        let txData:any
+        let agent:any
+
+        let params: any = {
+            inTokenAddress: fromToken,
+            outTokenAddress: toToken,
+            amount: formatEther(amount),
+            gasPrice: (randomFloat(0.005, 0.006)).toString(),
+            slippage: 1,
+            account: this.walletAddress
+        }
+
+        if (openoceanConfig.useReferral) {
+            params.referrer = '0x2300f68064BfaafA381cd36f2695CDfEAAc09231'
+            params.referrerFee = 1
+        }
+        
+        await axios.get('https://open-api.openocean.finance/v3/8453/swap_quote', {
+            params: params
+        }).then(response => {
+            txData = response.data.data
+        }).catch(e => {
+            this.logger.info(`${this.walletAddress} | Openocean bad request`)
         })
 
-        return BigInt(Math.round(Number(minAmountOut[1]) - (Number(minAmountOut[1]) /100 * slippage)))
+        return txData
     }
 
     async swapEthToToken(toToken: string = 'USDC', amount: bigint) {
         await waitGas()
+        
         this.logger.info(`${this.walletAddress} | Swap ${formatEther(amount)} ETH -> ${toToken}`)
         let successSwap: boolean = false
         let retryCount = 1
-
+        
         while (!successSwap) {
             try {
-                const minAmountOut = await this.getMinAmountOut(tokens['ETH'], tokens[toToken], amount, 1)
-                const deadline: number = Math.floor(Date.now() / 1000) + 1000000
-
-                const txHash = await this.baseWallet.writeContract({
-                    address: this.baseswapContract,
-                    abi: baseswapRouterAbi,
-                    functionName: 'swapExactETHForTokens',
-                    args: [
-                        minAmountOut,
-                        [
-                            tokens['ETH'],
-                            tokens[toToken]
-                        ],
-                        this.walletAddress,
-                        deadline
-                    ],
-                    value: amount,
-                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
-                })
+                const transactionData = await this.getTransactionData(tokens['ETH_zero'], tokens[toToken], amount, 1)
+                transactionData.value = parseInt(transactionData.value)
+                transactionData.gasPrice = parseGwei((randomFloat(0.0005, 0.0006)).toString())
+                
+                const txHash = await this.baseWallet.sendTransaction(transactionData)
+                
                 successSwap = true
                 this.logger.info(`${this.walletAddress} | Success swap ${formatEther(amount)} ETH -> ${toToken}: https://basescan.org/tx/${txHash}`)
             } catch (e) {
@@ -95,6 +98,7 @@ export class Baseswap {
 
     async swapTokenToEth(fromToken: string = 'USDC') {
         await waitGas()
+        
         let amount = await getTokenBalance(this.baseClient, tokens[fromToken], this.walletAddress)
         let successSwap: boolean = false
         let retryCount = 1
@@ -103,31 +107,16 @@ export class Baseswap {
 
         while (!successSwap) {
             try {
-                const minAmountOut = await this.getMinAmountOut(tokens[fromToken], tokens['ETH'], amount, 1)
-                const deadline: number = Math.floor(Date.now() / 1000) + 1000000
+                const transactionData = await this.getTransactionData(tokens[fromToken], tokens['ETH_zero'], amount, 1)
+                transactionData.gasPrice = parseGwei((randomFloat(0.0005, 0.0006)).toString())
 
-                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.baseswapContract, amount, this.logger)
+                await approve(this.baseWallet, this.baseClient, tokens[fromToken], this.openoceanContract, amount, this.logger)
 
                 const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
                 this.logger.info(`${this.walletAddress} | Waiting ${sleepTime} sec after approve before swap...`)
                 await sleep(sleepTime * 1000)
 
-                const txHash = await this.baseWallet.writeContract({
-                    address: this.baseswapContract,
-                    abi: baseswapRouterAbi,
-                    functionName: 'swapExactTokensForETH',
-                    args: [
-                        amount,
-                        minAmountOut,
-                        [
-                            tokens[fromToken],
-                            tokens['ETH']
-                        ],
-                        this.walletAddress,
-                        deadline
-                    ],
-                    gasPrice: parseGwei((randomFloat(0.005, 0.006)).toString())
-                })
+                const txHash = await this.baseWallet.sendTransaction(transactionData)
 
                 successSwap = true
                 this.logger.info(`${this.walletAddress} | Success swap ${fromToken} -> ETH: https://basescan.org/tx/${txHash}`)
@@ -139,7 +128,6 @@ export class Baseswap {
                             await refill(this.privateKey)
                         }
                     }
-                    
                     this.logger.info(`${this.walletAddress} | Wait 30 sec and retry swap ${retryCount}/3`)
                     retryCount++
                     await sleep(30 * 1000)

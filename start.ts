@@ -1,6 +1,6 @@
 import { privateKeyConvert, readWallets } from "./utils/wallet"
 import { random, randomFloat, shuffle, sleep } from "./utils/common"
-import { binanceConfig, bridgeConfig, generalConfig, merklyConfig, mintfunConfig, odosConfig } from "./config"
+import { binanceConfig, bridgeConfig, bungeeConfig, generalConfig, merklyConfig, mintfunConfig, odosConfig } from "./config"
 import { makeLogger } from "./utils/logger"
 import { entryPoint } from "./utils/menu"
 import { Bridge } from "./modules/bridge"
@@ -16,6 +16,9 @@ import { Odos } from "./modules/odos"
 import { waitGas } from "./utils/getCurrentGas"
 import { Binance } from "./modules/binance"
 import { Zerius } from "./modules/zerius"
+import { Alienswap } from "./modules/alienswap"
+import { Bungee } from "./modules/bungee"
+import { Openocean } from "./modules/openocean"
 
 let privateKeys = readWallets('./private_keys.txt')
 
@@ -50,7 +53,7 @@ async function bridgeModule() {
             }
         } else {
             const officialBridgeSum = randomFloat(bridgeConfig.bridgeFrom, bridgeConfig.bridgeTo)
-            if (await waitGas()) {
+            if (await waitGas('bridge')) {
                 await bridge.bridge(officialBridgeSum.toString())
             }
         }
@@ -119,11 +122,36 @@ async function merklyRefuelModule() {
     }
 }
 
+async function bungeeModule() {
+    const logger = makeLogger("Bungee")
+    for (let privateKey of privateKeys) {
+        const sum = randomFloat(bungeeConfig.refuelFrom, bungeeConfig.refuelTo)
+        const merkly = new Bungee(privateKeyConvert(privateKey))
+        await merkly.refuel(sum.toString())
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function baseswapModule() {
     const logger = makeLogger("Baseswap")
     for (let privateKey of privateKeys) {
         const baseswap = new Baseswap(privateKeyConvert(privateKey))
         await baseswap.roundSwap()
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
+async function alienswapModule() {
+    const logger = makeLogger("Alienswap")
+    for (let privateKey of privateKeys) {
+        const alienswap = new Alienswap(privateKeyConvert(privateKey))
+        await alienswap.roundSwap()
         
         const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
         logger.info(`Waiting ${sleepTime} sec until next wallet...`)
@@ -179,6 +207,18 @@ async function odosModule() {
     }
 }
 
+async function openoceanModule() {
+    const logger = makeLogger("Openocean")
+    for (const [index, privateKey] of privateKeys.entries()) {
+        const openocean = new Openocean(privateKeyConvert(privateKey))
+        await openocean.roundSwap()
+        
+        const sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
+        logger.info(`Waiting ${sleepTime} sec until next wallet...`)
+        await sleep(sleepTime * 1000)
+    }
+}
+
 async function aaveModule() {
     const logger = makeLogger("Aave")
     for (let privateKey of privateKeys) {
@@ -219,7 +259,7 @@ async function zeriusModule() {
 async function randomModule() {
     const logger = makeLogger("Random")
     for (let privateKey of privateKeys) {
-        const randomChooice = random(1, 10)
+        const randomChooice = random(1, 12)
         let sleepTime
 
         switch (randomChooice) {
@@ -264,6 +304,14 @@ async function randomModule() {
                 const aave = new Aave(privateKeyConvert(privateKey))
                 await aave.run()
                 break
+            case 11:
+                const alienswap = new Alienswap(privateKeyConvert(privateKey))
+                await alienswap.roundSwap()
+                break
+            case 12:
+                const openocean = new Openocean(privateKeyConvert(privateKey))
+                await openocean.roundSwap()
+                break
         }
 
         sleepTime = random(generalConfig.sleepFrom, generalConfig.sleepTo)
@@ -275,7 +323,7 @@ async function randomModule() {
 async function randomSwapModule() {
     const logger = makeLogger("Random swap")
     for (let privateKey of privateKeys) {
-        const randomChooice = random(1, 5)
+        const randomChooice = random(1, 7)
         let sleepTime
 
         switch (randomChooice) {
@@ -298,6 +346,14 @@ async function randomSwapModule() {
             case 5:
                 const odos = new Odos(privateKeyConvert(privateKey))
                 await odos.roundSwap()
+                break
+            case 6:
+                const alienswap = new Alienswap(privateKeyConvert(privateKey))
+                await alienswap.roundSwap()
+                break
+            case 7:
+                const openocean = new Openocean(privateKeyConvert(privateKey))
+                await openocean.roundSwap()
                 break
         }
 
@@ -396,9 +452,17 @@ async function customModule() {
                     const odos = new Odos(privateKeyConvert(privateKey))
                     await odos.roundSwap()
                     break
+                case 'openocean':
+                    const openocean = new Openocean(privateKeyConvert(privateKey))
+                    await openocean.roundSwap()
+                    break
                 case 'aave':
                     const aave = new Aave(privateKeyConvert(privateKey))
                     await aave.run()
+                    break
+                case 'alienswap':
+                    const alienswap = new Alienswap(privateKeyConvert(privateKey))
+                    await alienswap.roundSwap()
                     break
             }
 
@@ -425,11 +489,17 @@ async function startMenu() {
         case "merkly":
             await merklyRefuelModule()
             break
+        case "bungee":
+            await bungeeModule()
+            break
         case "aave":
             await aaveModule()
             break
         case "odos":
             await odosModule()
+            break
+        case "openocean":
+            await openoceanModule()
             break
         case "pancake":
             await pancakeModule()
@@ -439,6 +509,9 @@ async function startMenu() {
             break
         case "baseswap":
             await baseswapModule()
+            break
+        case "alienswap":
+            await alienswapModule()
             break
         case "woofi":
             await woofiModule()

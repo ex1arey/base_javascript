@@ -4,9 +4,10 @@ export const generalConfig = {
     sleepFrom: 60,
     sleepTo: 150,
     shuffleWallets: true,
-    shuffleCustomModules: false,
+    shuffleCustomModules: true,
+    maxGas: 15,
     customModules: ['l2telegraph', 'mintfun', 'uniswap']
-    // 'aave', 'baseswap', 'l2telegraph', 'l2telegraph_message', 'merkly', 'mintfun', 'odos', 'pancake', 'uniswap', 'woofi'
+    // 'aave', 'baseswap', 'l2telegraph', 'l2telegraph_message', 'merkly', 'mintfun', 'odos', 'pancake', 'uniswap', 'woofi', 'alienswap', 'bungee'
 }
 
 export const bridgeConfig = {
@@ -48,6 +49,10 @@ export const odosConfig = {
     useReferral: true
 }
 
+export const openoceanConfig = {
+    useReferral: true
+}
+
 export const merklyConfig = {
     refuelFrom: 0.00001,
     refuelTo: 0.00002,
@@ -66,4 +71,10 @@ export const zeriusConfig = {
     // "bsc": 102,
     // "avalanche": 106,
     // "arbitrum": 110,
+}
+
+export const bungeeConfig = {
+    refuelFrom: 0.0025, // min: 0.0025
+    refuelTo: 0.0035,
+    destinationNetwork: 'random' // bsc, polygon, arbitrum, avalanche, zksync, zkevm
 }

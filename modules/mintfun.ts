@@ -7,6 +7,7 @@ import { mintfunContracts } from "../data/mintfun-contracts"
 import { binanceConfig } from "../config"
 import { refill } from "../utils/refill"
 import { randomFloat, sleep } from "../utils/common"
+import { waitGas } from "../utils/getCurrentGas"
 
 export class Mintfun {
     privateKey: Hex
@@ -20,6 +21,8 @@ export class Mintfun {
     }
 
     async mintRandom() {
+        await waitGas()
+        
         const baseWallet = getBaseWalletClient(this.privateKey)
 
         const contract: Hex = getRandomContract(mintfunContracts)
