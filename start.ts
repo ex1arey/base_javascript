@@ -413,6 +413,8 @@ async function customModule() {
         if (generalConfig.shuffleCustomModules) {
             shuffle(customModules)
         }
+        customModules.splice(random(generalConfig.countModulesFrom, generalConfig.countModulesTo))
+        
         for (let customModuleItem of customModules) {
             switch (customModuleItem) {
                 case 'mintfun':

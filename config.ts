@@ -3,9 +3,11 @@ export const generalConfig = {
     baserpc: 'https://rpc.ankr.com/base',
     sleepFrom: 60,
     sleepTo: 150,
-    shuffleWallets: true,
+    shuffleWallets: false,
     shuffleCustomModules: true,
     maxGas: 15,
+    countModulesFrom: 1, // сколько кастом модулей сделать
+    countModulesTo: 3,
     customModules: ['l2telegraph', 'mintfun', 'uniswap']
     // 'aave', 'baseswap', 'l2telegraph', 'l2telegraph_message', 'merkly', 'mintfun', 'odos', 'pancake', 'uniswap', 'woofi', 'alienswap', 'bungee'
 }
