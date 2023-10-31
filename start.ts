@@ -410,12 +410,10 @@ async function customModule() {
 
     for (let privateKey of privateKeys) {
         let sleepTime
-        if (generalConfig.shuffleCustomModules) {
-            shuffle(customModules)
-        }
-        customModules.splice(random(generalConfig.countModulesFrom, generalConfig.countModulesTo))
-        
-        for (let customModuleItem of customModules) {
+        let customModulesCount = random(generalConfig.countModulesFrom, generalConfig.countModulesTo)
+        let userCustomModules = (generalConfig.shuffleCustomModules ? shuffle(customModules) : customModules).slice(customModulesCount)
+
+        for (let customModuleItem of userCustomModules) {
             switch (customModuleItem) {
                 case 'mintfun':
                     const mintfun = new Mintfun(privateKeyConvert(privateKey))
